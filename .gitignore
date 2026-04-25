@@ -1,0 +1,24 @@
+﻿# env
+.env
+.env.local
+.env.*.local
+
+# dependencies
+node_modules
+
+# documentation (إذا ما بدك ترفعها)
+TECHNICAL_DOCUMENTATION.md
+QA_NOTION_PACKAGE.md
+
+# seed files (إذا بدك تستثنيها)
+seed/
+
+# logs
+*.log
+
+# build
+build
+dist
+
+# runtime uploads
+backend/uploads

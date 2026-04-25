@@ -1,0 +1,135 @@
+.task-modal__summary {
+  margin-bottom: 18px;
+  padding: 16px;
+
+  border-radius: 18px 24px 16px 22px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(189, 207, 255, 0.18),
+    rgba(231, 197, 255, 0.12)
+  );
+
+  color: var(--dj-text-muted);
+
+  border: 1px solid rgba(120, 140, 255, 0.08);
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* subtle moving light */
+.task-modal__summary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+
+  transform: skewX(-20deg);
+  opacity: 0;
+  transition: 0.6s;
+}
+
+.task-modal__summary:hover::after {
+  left: 120%;
+  opacity: 1;
+}
+
+.task-modal__summary p,
+.task-modal__summary span {
+  margin: 0;
+}
+
+.task-modal__summary span {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.task-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task-modal__success {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 14px;
+
+  color: var(--dj-success);
+
+  animation: fadeInUp 0.5s ease;
+}
+
+.task-modal__success h3,
+.task-modal__success p {
+  margin: 0;
+}
+
+/* عنوان النجاح يكون أوضح */
+.task-modal__success h3 {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* النص secondary */
+.task-modal__success p {
+  color: var(--dj-text-muted);
+  font-size: 0.9rem;
+}
+
+/* subtle pulse effect */
+.task-modal__success::before {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+
+  background: radial-gradient(
+    circle,
+    rgba(120, 255, 180, 0.25),
+    transparent 70%
+  );
+
+  border-radius: 50%;
+  animation: pulseGlow 2.5s infinite;
+}
+
+/* animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+}

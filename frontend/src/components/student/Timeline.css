@@ -1,0 +1,210 @@
+.timeline-view {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  position: relative;
+  width: 100%;                 /* ياخد عرض الأب */
+  max-width: 100%;
+  overflow-x: visible;         /* يسمح بخروج النقاط قليلاً لكن بدون سكرول أفقي */
+}
+
+/* 🔥 الخط العمودي (روح الـ timeline) - نعدل المسافة عشان ما يضيع */
+.timeline-view::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 20px;                 /* زيادة بسيطة لتجنب الحافة */
+  width: 3px;
+
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(120, 140, 255, 0.4),
+    transparent
+  );
+
+  border-radius: 10px;
+}
+
+.timeline-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+
+.timeline-group__label {
+  align-self: flex-start;
+  padding: 8px 14px;
+
+  border-radius: 14px 20px 12px 18px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(189, 207, 255, 0.3),
+    rgba(231, 197, 255, 0.18)
+  );
+
+  font-weight: 700;
+  font-size: 0.85rem;
+
+  transform: rotate(-0.5deg);
+}
+
+.timeline-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.timeline-entry {
+  padding: 22px 22px 22px 28px;
+
+  border-radius: 18px 26px 16px 22px;
+
+  background: rgba(255, 255, 255, 0.94);
+
+  border: 1px solid rgba(32, 63, 154, 0.06);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.05);
+
+  position: relative;
+
+  transition: all 0.25s ease;
+
+  /* نضمن الـ entry ما يسبب overflow */
+  margin-right: 12px;          /* مسافة للنقطة يلي برا */
+}
+
+/* 🔥 نقطة الـ timeline - نعدل مكانها عشان ما تنقص */
+.timeline-entry::before {
+  content: "";
+  position: absolute;
+  right: -18px;                /* بدل -26px عشان تبقى ظاهرة ضمن الأب */
+  top: 26px;
+
+  width: 10px;
+  height: 10px;
+
+  background: var(--dj-primary);
+  border-radius: 50%;
+
+  box-shadow: 0 0 0 4px rgba(120, 140, 255, 0.15);
+}
+
+/* subtle hover */
+.timeline-entry:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* header/footer (بدون تغيير كبير) */
+.timeline-entry__header,
+.timeline-entry__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.timeline-entry__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* type badge */
+.timeline-entry__type {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 12px;
+
+  border-radius: 12px 18px 12px 16px;
+
+  font-weight: 700;
+  font-size: 0.8rem;
+
+  background: rgba(189, 207, 255, 0.25);
+}
+
+/* body */
+.timeline-entry__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.timeline-entry__body h3 {
+  margin: 0;
+  font-weight: 700;
+}
+
+.timeline-entry__title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.timeline-entry__owner {
+  color: var(--dj-text-soft);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.timeline-entry__body p,
+.timeline-entry__meta {
+  margin: 0;
+  color: var(--dj-text-muted);
+  line-height: 1.75;
+}
+
+/* footer */
+.timeline-entry__footer {
+  margin-top: 16px;
+  padding-top: 14px;
+
+  border-top: 1px dashed rgba(32, 63, 154, 0.1);
+}
+
+/* status */
+.timeline-entry__status {
+  color: var(--dj-success);
+  font-weight: 700;
+}
+
+.timeline-entry__status.is-muted {
+  color: var(--dj-text-soft);
+}
+
+/* responsive – تصحيح المسافات للشاشات الصغيرة */
+@media (max-width: 575.98px) {
+  .timeline-view::before {
+    right: 12px;               /* يبقى الخط داخل الشاشة */
+  }
+
+  .timeline-entry {
+    margin-right: 8px;
+    padding: 18px;
+  }
+
+  .timeline-entry::before {
+    right: -12px;              /* نقطة timeline */
+    top: 20px;
+  }
+
+  .timeline-entry__header,
+  .timeline-entry__footer,
+  .timeline-entry__title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .timeline-entry__owner {
+    white-space: normal;
+  }
+}
