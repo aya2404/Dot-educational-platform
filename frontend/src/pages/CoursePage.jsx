@@ -55,7 +55,11 @@ const CoursePage = () => {
       setIsLoading(true);
       setError('');
       try {
-        await Promise.all([fetchCourse(), fetchContent(), fetchProgress(), fetchSubmissions()]);
+        await Promise.all([fetchCourse(), fetchContent()]);
+
+        if (isStudent) {
+          await Promise.allSettled([fetchProgress(), fetchSubmissions()]);
+        }
       } catch (requestError) {
         setError(requestError.response?.data?.message || 'تعذر تحميل بيانات الكورس');
       } finally {
