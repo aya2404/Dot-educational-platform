@@ -2,9 +2,9 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const connectDB = require('./config/db');
-const { UPLOAD_DIR } = require('./config/uploads');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const courseRoutes = require('./routes/courses');
@@ -16,34 +16,15 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
-const normalizeOrigin = (value) => {
-  const cleanValue = typeof value === 'string' ? value.trim().replace(/\/+$/, '') : '';
-
-  if (!cleanValue) {
-    return '';
-  }
-
-  try {
-    const parsedUrl = new URL(cleanValue);
-    return `${parsedUrl.protocol}//${parsedUrl.host}`;
-  } catch {
-    return cleanValue;
-  }
-};
-
 const allowedOrigins = (process.env.CLIENT_ORIGIN || '')
   .split(',')
-  .map(normalizeOrigin)
+  .map((origin) => origin.trim())
   .filter(Boolean);
-
-app.set('trust proxy', 1);
 
 app.use(
   cors({
     origin(origin, callback) {
-      const normalizedOrigin = normalizeOrigin(origin);
-
-      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin)) {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
@@ -63,7 +44,7 @@ app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use(
   '/uploads',
-  express.static(UPLOAD_DIR, {
+  express.static(path.join(__dirname, 'uploads'), {
     index: false,
     maxAge: '1d',
   })
