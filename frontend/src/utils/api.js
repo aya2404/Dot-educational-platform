@@ -1,15 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL, getApiOriginFromBaseUrl } from './apiBaseUrl';
 
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dot-project-2asd.onrender.com';
-
-export const getApiOrigin = () => {
-  try {
-    const url = new URL(API_BASE_URL);
-    return `${url.protocol}//${url.host}`;
-  } catch {
-    return typeof window !== 'undefined' ? window.location.origin : '';
-  }
-};
+export const getApiOrigin = () => getApiOriginFromBaseUrl(API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,

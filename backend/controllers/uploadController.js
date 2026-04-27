@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { cloudinary, hasCloudinaryConfig } = require('../config/cloudinary');
+const { UPLOAD_DIR } = require('../config/uploads');
 const { inferAttachmentKind, toPublicUrl } = require('../utils/attachments');
 
 const sanitizeFileName = (fileName) => {
@@ -55,11 +56,10 @@ const uploadToCloudinary = (file) =>
   });
 
 const saveLocally = async (file, req) => {
-  const uploadsDir = path.join(__dirname, '..', 'uploads');
-  await fs.promises.mkdir(uploadsDir, { recursive: true });
+  await fs.promises.mkdir(UPLOAD_DIR, { recursive: true });
 
   const safeName = sanitizeFileName(file.originalname);
-  const filePath = path.join(uploadsDir, safeName);
+  const filePath = path.join(UPLOAD_DIR, safeName);
 
   await fs.promises.writeFile(filePath, file.buffer);
 

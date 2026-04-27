@@ -1,19 +1,4 @@
-REACT_APP_API_URL='https://dot-backend.onrender.com'
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dot-backend.onrender.com';
-const FILE_EXTENSIONS = new Set([
-  '.pdf',
-  '.doc',
-  '.docx',
-  '.xls',
-  '.xlsx',
-  '.ppt',
-  '.pptx',
-  '.json',
-  '.txt',
-  '.csv',
-  '.zip',
-  '.rar',
-]);
+import { API_BASE_URL, getApiOriginFromBaseUrl } from './apiBaseUrl';
 
 const sanitizeText = (value) => (typeof value === 'string' ? value.trim() : '');
 
@@ -26,16 +11,7 @@ const decodeSafe = (value) => {
 };
 
 const getApiOrigin = () => {
-  try {
-    const url = new URL(API_BASE_URL);
-    return `${url.protocol}//${url.host}`;
-  } catch {
-    if (typeof window !== 'undefined') {
-      return window.location.origin;
-    }
-
-    return '';
-  }
+  return getApiOriginFromBaseUrl(API_BASE_URL);
 };
 
 export const resolveAttachmentUrl = (url) => {
@@ -62,18 +38,6 @@ const getAttachmentName = (url, fallback = 'ملف مرفق') => {
 
   const fileName = cleanUrl.split('?')[0].split('#')[0].split('/').pop();
   return fileName ? decodeSafe(fileName) : fallback;
-};
-
-const getAttachmentExtension = (url) => {
-  const cleanUrl = sanitizeText(url);
-
-  if (!cleanUrl) {
-    return '';
-  }
-
-  return cleanUrl.split('?')[0].split('#')[0].split('.').length > 1
-    ? `.${cleanUrl.split('?')[0].split('#')[0].split('.').pop().toLowerCase()}`
-    : '';
 };
 
 export const normalizeAttachment = (attachment) => {
@@ -105,10 +69,7 @@ export const normalizeAttachment = (attachment) => {
   }
 
   const mimeType = sanitizeText(attachment.mimeType);
-  const extension = getAttachmentExtension(url);
-  const kind =
-    attachment.kind ||
-    (mimeType.startsWith('image/') ? 'image' : FILE_EXTENSIONS.has(extension) || mimeType ? 'file' : 'link');
+  const kind = attachment.kind || (mimeType.startsWith('image/') ? 'image' : 'file');
   const size = Number(attachment.size);
 
   return {
