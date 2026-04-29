@@ -89,7 +89,6 @@ const CoursePage = () => {
 
   return (
     <AppLayout>
-      {/* تقليل gap العام للصفحة */}
       <div className="app-page" style={{ gap: '16px' }}>
         <div className="page-toolbar">
           <button type="button" className="btn btn-outline-primary" onClick={() => navigate(-1)}>
@@ -123,7 +122,6 @@ const CoursePage = () => {
 
         {!isLoading && !error && course && (
           <>
-            {/* تصغير padding و margin داخل intro */}
             <section
               className="page-intro page-intro--course"
               style={{ padding: '20px 24px', marginBottom: 0 }}
@@ -135,7 +133,6 @@ const CoursePage = () => {
                 <h1 className="page-intro__title" style={{ marginBottom: '8px' }}>
                   {course.name}
                 </h1>
-                {/* يمكن إضافة النص الترحيبي إذا كان موجوداً في course.description */}
                 {course.description && (
                   <p className="page-intro__subtitle" style={{ marginTop: '4px' }}>
                     {course.description}

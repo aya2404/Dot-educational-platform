@@ -69,7 +69,7 @@ a {
   transition: color 0.2s ease;
 }
 
-/* ========= BUTTONS ========= */
+/* ===========================BUTTONS */
 .btn {
   border-radius: 28px 18px 32px 22px;
   font-weight: 600;
@@ -151,7 +151,7 @@ a {
   color: #8d375f;
 }
 
-/* ========= FORM CONTROLS ========= */
+/* =========================================================== FORM CONTROLS*/
 .form-control,
 .form-select,
 .input-group-text {
@@ -176,7 +176,7 @@ a {
   color: var(--dj-primary);
 }
 
-/* ========= ALERTS ========= */
+/* =========================================================== ALERTS */
 .alert {
   border-radius: 20px 28px 16px 24px;
   border: 1px solid transparent;
@@ -201,7 +201,7 @@ a {
   color: var(--dj-text-muted);
 }
 
-/* ========= TABLES ========= */
+/* ==================================================================================== TABLES*/
 .table > :not(caption) > * > * {
   border-bottom-color: rgba(32, 63, 154, 0.08);
   color: var(--dj-text);
@@ -216,7 +216,7 @@ a {
   letter-spacing: 0.05em;
 }
 
-/* ========= APP SHELL & LAYOUT ========= */
+/* ===========================================================SHELL&LAYOUT */
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -280,7 +280,7 @@ a {
     display: block;
   }
 }
-/* ========= PAGE COMPONENTS ========= */
+/* ===========================================================COMPONENTS  */
 .app-page {
   display: flex;
   flex-direction: column;
@@ -354,7 +354,7 @@ a {
   color: var(--dj-primary);
 }
 
-/* ========= CARDS & SURFACES ========= */
+/* =========================================================== CARDS&SURFACES  */
 .surface-card {
   padding: 18px 20px;
   border-radius: 26px 18px 32px 22px;
@@ -415,7 +415,7 @@ a {
   font-size: 0.8rem;
 }
 
-/* ========= SECTION HEADINGS ========= */
+/* =========================================================== SEC-HEADINGS ========= */
 .section-heading {
   display: flex;
   align-items: center;
@@ -470,7 +470,7 @@ a {
   color: var(--dj-text-muted);
 }
 
-/* ========= COURSE TILE ========= */
+/* =========================================================== COURSE TILE */
 .course-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -526,7 +526,7 @@ a {
   border-top: 1px dashed rgba(32, 63, 154, 0.1);
 }
 
-/* ========= STACK LIST ========= */
+/* ==================================================================================== STACK LIST  */
 .stack-list {
   display: flex;
   flex-direction: column;
@@ -558,7 +558,7 @@ a {
   color: var(--dj-text-muted);
 }
 
-/* ========= TIMELINE ========= */
+/* =========================================================== TIMELINE  */
 .timeline-view {
   display: flex;
   flex-direction: column;
@@ -607,7 +607,7 @@ a {
   border-top: 1px dashed rgba(32, 63, 154, 0.1);
 }
 
-/* ========= SHARED MODAL ========= */
+/* =========================================================== SHARED MODAL  */
 .theme-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -677,7 +677,7 @@ a {
   flex-wrap: wrap;
 }
 
-/* ========= RESPONSIVE ========= */
+/* =========================================================== RESPONSIVE */
 @media (max-width: 991.98px) {
   .app-shell {
     flex-direction: column;

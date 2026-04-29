@@ -15,12 +15,10 @@
   background-size: auto, auto, 44px 44px, 44px 44px, auto;
 }
 
-/* إخفاء الأشكال الخلفية (اختياري، يمكنك حذف هذا القسم إن أردت الاحتفاظ بالدوائر) */
 .login-screen__shape {
   display: none;
 }
 
-/* حاوية رئيسية – بدون العمودين */
 .login-shell {
   position: relative;
   z-index: 1;
@@ -30,18 +28,15 @@
   padding: 0;
 }
 
-/* إخفاء القسم البصري (الذي كان على اليمين) */
 .login-shell__visual {
   display: none;
 }
 
-/* إزالة أي فواصل أو هوامش إضافية */
 .login-shell__brand-anchor {
   text-align: center;
   margin-bottom: 1.5rem;
 }
 
-/* النموذج يأخذ العرض الكامل */
 .login-shell__form {
   width: 100%;
   min-height: auto;
@@ -70,7 +65,6 @@
   color: transparent;
 }
 
-/* تنسيق الحقول والأزرار */
 .login-card input[type="password"],
 .login-card input[type="text"] {
   width: 100%;
@@ -90,7 +84,6 @@
   background: white;
 }
 
-/* تنسيق الزر (إذا أردت تخصيصه) */
 .btn-primary {
   background: #6d5acf;
   border: none;
@@ -105,7 +98,6 @@
   transform: translateY(-2px);
 }
 
-/* استجابة للشاشات الصغيرة */
 @media (max-width: 575.98px) {
   .login-screen {
     padding: 16px;

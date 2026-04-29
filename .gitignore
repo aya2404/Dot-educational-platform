@@ -1,24 +1,61 @@
-﻿# env
+﻿# =====================
+# Environment
+# =====================
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env.*.local
+_env
 
-# dependencies
-node_modules
+# اترك هذا مرفوع (مهم للمشروع)
+!.env.example
 
-# documentation (إذا ما بدك ترفعها)
+
+# =====================
+# Dependencies
+# =====================
+node_modules/
+
+
+# =====================
+# Logs
+# =====================
+*.log
+
+
+# =====================
+# Build
+# =====================
+build/
+dist/
+
+
+# =====================
+# Seed
+# =====================
+seed/
+
+
+# =====================
+# Runtime uploads
+# =====================
+backend/uploads/
+
+
+# =====================
+# Documentation (ignore)
+# =====================
+DOCUMENTATION.md
 TECHNICAL_DOCUMENTATION.md
 QA_NOTION_PACKAGE.md
 
-# seed files (إذا بدك تستثنيها)
-seed/
 
-# logs
-*.log
-
-# build
-build
-dist
-
-# runtime uploads
-backend/uploads
+# =====================
+# Editor / OS
+# =====================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

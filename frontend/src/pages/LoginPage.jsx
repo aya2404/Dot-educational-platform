@@ -39,18 +39,15 @@ const LoginPage = () => {
 
   return (
     <div className="login-screen">
-      {/* إزالة الأشكال الخلفية اختياري - يمكن الاحتفاظ بها */}
       <div className="login-screen__shape login-screen__shape--one" />
       <div className="login-screen__shape login-screen__shape--two" />
       <div className="login-screen__shape login-screen__shape--three" />
 
       <div className="login-shell login-shell--centered-only">
-        {/* الشعار في الأعلى (اختياري) */}
         <div className="login-shell__brand-anchor">
           <BrandLogo className="login-brand-panel__brand" />
         </div>
 
-        {/* القسم الخاص بالنموذج فقط */}
         <section className="login-shell__form">
           <div className="login-card">
             <div className="mb-4">

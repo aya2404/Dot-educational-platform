@@ -194,7 +194,7 @@ const getStudentProgress = async (req, res) => {
     });
   } catch (error) {
     console.error('getStudentProgress error:', error);
-    return res.status(500).json({ success: false, message: 'خطأ في الخادم' });
+    return res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
   }
 };
 

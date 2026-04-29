@@ -3,18 +3,17 @@
   flex-direction: column;
   gap: 26px;
   position: relative;
-  width: 100%;                 /* ياخد عرض الأب */
+  width: 100%;                
   max-width: 100%;
-  overflow-x: visible;         /* يسمح بخروج النقاط قليلاً لكن بدون سكرول أفقي */
+  overflow-x: visible;     
 }
 
-/* 🔥 الخط العمودي (روح الـ timeline) - نعدل المسافة عشان ما يضيع */
 .timeline-view::before {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  right: 20px;                 /* زيادة بسيطة لتجنب الحافة */
+  right: 20px;                
   width: 3px;
 
   background: linear-gradient(
@@ -71,16 +70,12 @@
   position: relative;
 
   transition: all 0.25s ease;
-
-  /* نضمن الـ entry ما يسبب overflow */
-  margin-right: 12px;          /* مسافة للنقطة يلي برا */
+  margin-right: 12px;   
 }
-
-/* 🔥 نقطة الـ timeline - نعدل مكانها عشان ما تنقص */
 .timeline-entry::before {
   content: "";
   position: absolute;
-  right: -18px;                /* بدل -26px عشان تبقى ظاهرة ضمن الأب */
+  right: -18px;             
   top: 26px;
 
   width: 10px;
@@ -92,13 +87,11 @@
   box-shadow: 0 0 0 4px rgba(120, 140, 255, 0.15);
 }
 
-/* subtle hover */
 .timeline-entry:hover {
   transform: translateY(-3px) scale(1.01);
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
 }
 
-/* header/footer (بدون تغيير كبير) */
 .timeline-entry__header,
 .timeline-entry__footer {
   display: flex;
@@ -114,7 +107,6 @@
   flex-wrap: wrap;
 }
 
-/* type badge */
 .timeline-entry__type {
   display: inline-flex;
   align-items: center;
@@ -130,7 +122,6 @@
   background: rgba(189, 207, 255, 0.25);
 }
 
-/* body */
 .timeline-entry__body {
   display: flex;
   flex-direction: column;
@@ -163,7 +154,6 @@
   line-height: 1.75;
 }
 
-/* footer */
 .timeline-entry__footer {
   margin-top: 16px;
   padding-top: 14px;
@@ -171,7 +161,6 @@
   border-top: 1px dashed rgba(32, 63, 154, 0.1);
 }
 
-/* status */
 .timeline-entry__status {
   color: var(--dj-success);
   font-weight: 700;
@@ -181,10 +170,9 @@
   color: var(--dj-text-soft);
 }
 
-/* responsive – تصحيح المسافات للشاشات الصغيرة */
 @media (max-width: 575.98px) {
   .timeline-view::before {
-    right: 12px;               /* يبقى الخط داخل الشاشة */
+    right: 12px;            
   }
 
   .timeline-entry {
@@ -193,7 +181,7 @@
   }
 
   .timeline-entry::before {
-    right: -12px;              /* نقطة timeline */
+    right: -12px;            
     top: 20px;
   }
 
