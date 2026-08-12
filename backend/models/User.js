@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema(
       type:String,
       required: [true, 'كلمة المرور مطلوبة'],
       minlength: [6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'],
+      select: false,
     },
 
     // User role determines what they can see and do
