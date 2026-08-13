@@ -14,6 +14,7 @@ import {
 import AttachmentList from '../common/AttachmentList';
 import ConfirmModal from '../common/ConfirmModal';
 import TaskSubmissionModal from './TaskSubmissionModal';
+import SubmissionsReviewModal from '../teacher/SubmissionsReviewModal';
 import {
   CONTENT_TYPES,
   formatArabicDate,
@@ -44,6 +45,7 @@ const Timeline = ({
   onEditContent,
 }) => {
   const [selectedTask, setSelectedTask] = useState(null);
+  const [reviewTask, setReviewTask] = useState(null);
   const [itemPendingDelete, setItemPendingDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -207,6 +209,20 @@ const Timeline = ({
                       ) : null}
                     </div>
 
+                    {isStudent && item.type === 'task' && submission?.status === 'graded' ? (
+                      <div className="timeline-entry__grade">
+                        <span className="timeline-entry__grade-score">
+                          الدرجة: {submission.grade}
+                          {typeof item.maxScore === 'number' ? ` / ${item.maxScore}` : ''}
+                        </span>
+                        {submission.feedback ? (
+                          <p className="timeline-entry__grade-feedback">
+                            ملاحظات المدرس: {submission.feedback}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+
                     {isStudent && item.type === 'task' ? (
                       <div className="timeline-entry__footer">
                         <span className={`timeline-entry__status ${isPastDeadline ? 'is-muted' : ''}`}>
@@ -224,6 +240,19 @@ const Timeline = ({
                             : submission
                               ? 'تعديل التسليم'
                               : 'تسليم المهمة'}
+                        </button>
+                      </div>
+                    ) : null}
+
+                    {!isStudent && item.type === 'task' ? (
+                      <div className="timeline-entry__footer">
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary"
+                          onClick={() => setReviewTask(item)}
+                        >
+                          <BsClipboardCheck size={16} />
+                          عرض التسليمات وتقييمها
                         </button>
                       </div>
                     ) : null}
@@ -247,6 +276,10 @@ const Timeline = ({
             }
           }}
         />
+      ) : null}
+
+      {reviewTask ? (
+        <SubmissionsReviewModal task={reviewTask} onClose={() => setReviewTask(null)} />
       ) : null}
 
       <ConfirmModal

@@ -147,10 +147,78 @@ const getTaskSubmissions = async (req, res) => {
     return res.json({
       success: true,
       count: submissions.length,
-      data: submissions.map((submission) => serializeSubmission(submission, req, { task })),
+      data: submissions.map((submission) =>
+        serializeSubmission(submission, req, { task, course: access.course })
+      ),
     });
   } catch (error) {
     console.error('getTaskSubmissions error:', error);
+    return res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
+  }
+};
+
+const gradeSubmission = async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'معرف التسليم غير صالح' });
+    }
+
+    const submission = await Submission.findById(req.params.id);
+
+    if (!submission) {
+      return res.status(404).json({ success: false, message: 'التسليم غير موجود' });
+    }
+
+    const task = await Content.findById(submission.task).select('course type maxScore dueDate title');
+
+    if (!task || task.type !== 'task') {
+      return res.status(404).json({ success: false, message: 'المهمة غير موجودة' });
+    }
+
+    // Server-side authorization: only an admin/superadmin or the assigned course
+    // teacher may grade. resolveCourseAccess with allowStudent:false is the same
+    // gate used to view a task's submissions, so students can never reach here.
+    const access = await resolveCourseAccess({
+      courseId: task.course,
+      user: req.user,
+      allowStudent: false,
+    });
+
+    if (!access.course) {
+      return res.status(access.statusCode).json({
+        success: false,
+        message: access.message,
+      });
+    }
+
+    const maxScore = typeof task.maxScore === 'number' ? task.maxScore : 100;
+    const rawGrade = req.body.grade;
+    const grade = Number(rawGrade);
+
+    if (rawGrade === '' || rawGrade === null || typeof rawGrade === 'undefined' || Number.isNaN(grade)) {
+      return res.status(400).json({ success: false, message: 'الدرجة مطلوبة ويجب أن تكون رقماً' });
+    }
+
+    if (grade < 0 || grade > maxScore) {
+      return res.status(400).json({
+        success: false,
+        message: `الدرجة يجب أن تكون بين 0 و ${maxScore}`,
+      });
+    }
+
+    submission.grade = grade;
+    submission.feedback = typeof req.body.feedback === 'string' ? req.body.feedback.trim() : '';
+    submission.status = 'graded';
+
+    await submission.save();
+    await submission.populate('student', 'name username studentId');
+
+    return res.json({
+      success: true,
+      data: serializeSubmission(submission, req, { task, course: access.course }),
+    });
+  } catch (error) {
+    console.error('gradeSubmission error:', error);
     return res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
   }
 };
@@ -244,5 +312,6 @@ module.exports = {
   getMySubmissions,
   getStudentTaskStatus,
   getTaskSubmissions,
+  gradeSubmission,
   submitTask,
 };
