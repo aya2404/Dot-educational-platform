@@ -38,6 +38,14 @@ PUBLIC_API_URL=http://localhost:5000
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+
+# Demo-account passwords — used ONLY by `npm run seed` (the seed refuses to run
+# without them). These are the fictional demo credentials; keep them here (this
+# file is git-ignored) and out of source code and the README.
+DEMO_STUDENT_PASSWORD=DotStudent2026!
+DEMO_TEACHER_PASSWORD=DotTeacher2026!
+DEMO_ADMIN_PASSWORD=DotAdmin2026!
+DEMO_SUPERADMIN_PASSWORD=DotSuper2026!
 ```
 > A template is provided at `backend/.env.example`. Do **not** put real secrets in the repo.
 
@@ -66,16 +74,47 @@ docker ps --filter name=dot-mongo
 There is no migration framework (Mongoose enforces the schema). Seed demo data:
 ```bash
 cd backend
-npm run seed        # WARNING: seed.js clears Users/Courses/Content/Enrollments/Submissions first
+npm run seed        # idempotent & non-destructive — safe to run anytime
 ```
-Expected output ends with: `Seed completed successfully`.
+Expected output ends with `Seed completed successfully (idempotent — safe to re-run)` followed
+by the demo-login summary.
 
-**Demo credentials** (login by student ID or username):
-| Role | ID | Password |
-|------|----|----------|
-| Super Admin | `SAD-0001` | `super2004` |
-| Teacher | `TCH-0001` | `eng123456` |
-| Student | `STU-1003` | `student1003` |
+The seed is **non-destructive and idempotent**: it never deletes existing users, courses,
+enrolments, or content. Every record is created once and updated in place on subsequent runs
+(keyed by a deterministic field — username / course name / `student+course` / `course+title`),
+so running it multiple times converges to the same state **without creating duplicates**.
+Passwords are always hashed by the User model's pre-save bcrypt hook — no plaintext is ever stored.
+
+---
+
+## 🎬 Demo Accounts
+
+The seed creates **exactly one fictional demo account per role**, wired to demo courses so every
+role logs into a meaningful (non-empty) dashboard. Every identity in the seed is fictional.
+
+> ⚠️ **Fictional, demo-only accounts** for local development, screenshots and demo videos.
+> **Not production credentials** — never reuse them in a real deployment.
+
+The app has no email field — **log in with the username _or_ the ID** (either works):
+
+| Role | Name | Username | ID | Password | Demonstrates |
+|------|------|----------|----|----------|--------------|
+| Student | Lina Salem | `demo.student` | `STU-9001` | `DotStudent2026!` | Enrolled courses, timeline, task submission |
+| Teacher | Omar Naji | `demo.teacher` | `TCH-9001` | `DotTeacher2026!` | Owns two courses, student roster, content management |
+| Admin | Sara Haddad | `demo.admin` | `ADM-9001` | `DotAdmin2026!` | User & content administration |
+| Super Admin | Kareem Faris | `demo.superadmin` | `SAD-9001` | `DotSuper2026!` | Full administration — users, courses, enrolments |
+
+**How the passwords are supplied:** these passwords are **not** stored in `seed.js`. The seed reads
+them from the `DEMO_*_PASSWORD` environment variables (set in `backend/.env`, shown in
+[step 2](#-backend--create-backendenv-never-commit-it-it-is-gitignored) above) and hashes them
+before saving. The values are documented **only here**, never in source code, logs, or the README.
+
+**Demo data:** the demo teacher (*Omar Naji*) owns two fictional courses —
+**Full-Stack Web Development — Demo Cohort** and **React & Modern Frontend — Demo Cohort** — each
+with realistic content across every type (announcements, lectures, materials, and submittable
+**tasks** with rolling future due dates). The demo student (*Lina Salem*) is enrolled in both.
+The dataset also includes **22 fictional filler students** (Arabic demo names) to populate course
+rosters and the admin / super-admin dashboards; they share the demo-student password.
 
 ---
 
