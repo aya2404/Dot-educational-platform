@@ -42,13 +42,13 @@ It’s a real, working full-stack application: JWT authentication, ownership-bas
 Each role logs into its own dashboard with data and actions scoped to what it’s allowed to do.
 
 ### 🎓 Student
-- View **enrolled courses** and a **date-grouped timeline** of lectures, materials, tasks, and announcements
+- View **enrolled courses** and a **date-grouped timeline** of lectures, videos, materials, external resources, tasks, and announcements
 - **Mark lectures complete** and track progress
 - **Submit assignments** (text and/or file attachments), edit or delete a submission **until the deadline**
 - Access is limited to courses the student is actually enrolled in
 
 ### 👨‍🏫 Teacher
-- Manage a course they are assigned to: **create, edit, and delete** lectures, materials, tasks, and announcements
+- Manage a course they are assigned to: **create, edit, and delete** lectures, videos, materials, external resources, tasks, and announcements
 - View the **student roster** for their course
 - Review **task submissions** for their tasks
 - Cannot manage users or other teachers’ courses (ownership-enforced)
@@ -72,7 +72,7 @@ Each role logs into its own dashboard with data and actions scoped to what it’
 
 **📝 Assignments & Submissions** — Task content with due dates and max scores; one submission per student per task; editable until the deadline; server-enforced submission window.
 
-**🗂️ Content Management** — Four content types (lecture, material, task, announcement) with ownership-checked create/edit/delete.
+**🗂️ Content Management** — Six content types (lecture, video, material, external link, task, announcement) — videos embed a safe player (YouTube / Vimeo only), external links open in a new tab with `rel="noopener noreferrer"` — all with ownership-checked create/edit/delete.
 
 **🛠️ Administration** — User CRUD, course CRUD, and enrolment management gated by role.
 
@@ -222,12 +222,15 @@ The seed creates **exactly one fictional demo account per role**, wired to reali
 
 **What each role shows in the demo**
 
-- 🎓 **Student** — two enrolled courses, a dated content timeline (lectures, materials, announcements, tasks), and the **assignment submission** flow
+- 🎓 **Student** — four enrolled courses, a dated content timeline (lectures, embedded videos, materials, external resources, announcements, tasks), and the **assignment submission** flow
 - 👨‍🏫 **Teacher** — owns two demo courses, sees the student roster, and manages content
 - 🛡️ **Admin** — user and content administration across the platform
 - 👑 **Super Admin** — full administration: users, courses, and enrolments
 
-The dataset is fully fictional and includes 22 filler students to populate rosters and the admin dashboards.
+The dataset is fully fictional and university-styled: **10 courses** across computer-science disciplines,
+**9 teachers**, and **50 students** with varied enrolments — enough to populate rosters and the admin
+dashboards realistically. Videos embed real public educational content; external resources link to
+reputable documentation (MDN, React, Node, MongoDB, PostgreSQL, Python, OWASP, AWS, GitHub).
 
 **🎥 [Watch the LinkedIn Demo Video](#)** *(link coming soon)*
 

@@ -17,7 +17,7 @@ const contentSchema = new mongoose.Schema
 
     type: {
       type:     String,
-      enum:     ['lecture', 'material', 'task', 'announcement'],
+      enum:     ['lecture', 'video', 'material', 'link', 'task', 'announcement'],
       required: [true, 'نوع المحتوى مطلوب'],
     },
 

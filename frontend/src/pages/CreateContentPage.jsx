@@ -276,6 +276,17 @@ const CreateContentPage = () => {
                       />
                     </div>
 
+                    {form.type === 'video' ? (
+                      <div className="alert alert-secondary mb-0">
+                        أضف رابط الفيديو (YouTube أو Vimeo) في قسم «رابط خارجي» أدناه — سيظهر مشغّل الفيديو للطلاب تلقائياً.
+                      </div>
+                    ) : null}
+                    {form.type === 'link' ? (
+                      <div className="alert alert-secondary mb-0">
+                        أضف رابط المصدر التعليمي في قسم «رابط خارجي» أدناه — سيُفتح في نافذة جديدة بأمان.
+                      </div>
+                    ) : null}
+
                     <FileUploader
                       value={form.attachments}
                       onChange={(attachments) => handleChange('attachments', attachments)}

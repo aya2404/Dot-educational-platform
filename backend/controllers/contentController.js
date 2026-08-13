@@ -7,7 +7,7 @@ const { resolveCourseAccess } = require('../utils/courseAccess');
 const { getContentPermissions } = require('../utils/permissions');
 const { serializeContent } = require('../utils/serializers');
 
-const TYPE_ORDER = { lecture: 1, material: 2, task: 3, announcement: 4 };
+const TYPE_ORDER = { announcement: 1, lecture: 2, video: 3, material: 4, link: 5, task: 6 };
 const VALID_TYPES = new Set(Object.keys(TYPE_ORDER));
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 

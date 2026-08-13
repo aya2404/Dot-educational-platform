@@ -109,12 +109,21 @@ them from the `DEMO_*_PASSWORD` environment variables (set in `backend/.env`, sh
 [step 2](#-backend--create-backendenv-never-commit-it-it-is-gitignored) above) and hashes them
 before saving. The values are documented **only here**, never in source code, logs, or the README.
 
-**Demo data:** the demo teacher (*Omar Naji*) owns two fictional courses —
-**Full-Stack Web Development — Demo Cohort** and **React & Modern Frontend — Demo Cohort** — each
-with realistic content across every type (announcements, lectures, materials, and submittable
-**tasks** with rolling future due dates). The demo student (*Lina Salem*) is enrolled in both.
-The dataset also includes **22 fictional filler students** (Arabic demo names) to populate course
-rosters and the admin / super-admin dashboards; they share the demo-student password.
+**Demo data:** the seed builds a small, university-style catalog — **10 fictional courses** across
+computer-science disciplines (Full-Stack Web Development, UI/UX Design, Database Systems, Software
+Engineering, Artificial Intelligence, Data Analysis, Computer Networks, Cybersecurity Fundamentals,
+Cloud Computing, Algorithms & Data Structures). Each course carries realistic content across **every
+type**: **announcements, lectures, videos** (embedded from real public educational YouTube videos),
+**materials, external resources** (links to reputable docs — MDN, React, Node, MongoDB, PostgreSQL,
+Python, OWASP, AWS, GitHub, etc., all opening in a new tab with `rel="noopener noreferrer"`), and
+submittable **tasks** with rolling future due dates.
+
+The demo teacher (*Omar Naji*) owns two of the courses — **Full-Stack Web Development** and
+**UI/UX Design** — and the demo student (*Lina Salem*) is enrolled in four courses for a full
+dashboard. The catalog is taught by **8 additional fictional teachers** (`teacher_001`…`teacher_008`,
+sharing the demo-teacher password) and populated by **50 fictional students** (`student_001`…`student_050`,
+Arabic demo names, sharing the demo-student password) with varied enrolments, so course rosters and the
+admin / super-admin dashboards look realistic. Every identity is fictional.
 
 ---
 
@@ -161,10 +170,11 @@ cd backend && npm audit
 cd frontend && npm run build
 #   Use CI=true to make ESLint warnings fail the build:  CI=true npm run build
 
-# Manual API smoke test against the running backend, e.g.:
+# Manual API smoke test against the running backend, e.g. (use the demo
+# super-admin — the password is your DEMO_SUPERADMIN_PASSWORD from backend/.env):
 curl -s -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"identifier":"SAD-0001","password":"super2004"}'
+  -d '{"identifier":"demo.superadmin","password":"<DEMO_SUPERADMIN_PASSWORD>"}'
 ```
 > The backend suite covers the audit's security fixes (password `select:false`, user-update
 > validation, missing-`JWT_SECRET` fail-fast, login rate limiting). Recommended next step:
