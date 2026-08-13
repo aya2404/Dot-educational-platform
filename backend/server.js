@@ -61,6 +61,10 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not configured');
+    }
+
     await connectDB();
 
     app.listen(PORT, () => {
@@ -72,4 +76,10 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only auto-start when run directly (e.g. `node server.js`), so the app can be
+// imported by tests without opening a port or exiting the process.
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;
