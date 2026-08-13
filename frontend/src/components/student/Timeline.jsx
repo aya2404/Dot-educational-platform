@@ -4,8 +4,10 @@ import {
   BsClipboardCheck,
   BsCollectionPlay,
   BsFolder2Open,
+  BsLink45Deg,
   BsMegaphone,
   BsPencilSquare,
+  BsPlayBtn,
   BsSend,
   BsTrash3,
 } from 'react-icons/bs';
@@ -18,11 +20,14 @@ import {
   formatDueDate,
   isDueDatePassed,
 } from '../../utils/contentTypes';
+import { getContentVideo } from '../../utils/videoEmbed';
 import './Timeline.css';
 
 const TYPE_ICONS = {
   lecture: BsCollectionPlay,
+  video: BsPlayBtn,
   material: BsFolder2Open,
+  link: BsLink45Deg,
   task: BsClipboardCheck,
   announcement: BsMegaphone,
 };
@@ -99,6 +104,8 @@ const Timeline = ({
                 const Icon = TYPE_ICONS[item.type] || BsCollectionPlay;
                 const isCompleted = completedLectures?.includes(item._id);
                 const submission = submissions?.[item._id];
+                const contentVideo = item.type === 'video' ? getContentVideo(item) : null;
+                const bodyIsVideoUrl = contentVideo && contentVideo.url === (item.body || '').trim();
                 const isPastDeadline = item.type === 'task' && isDueDatePassed(item.dueDate);
                 const canEditContent = !isStudent && item.permissions?.canEdit;
                 const canDeleteContent = !isStudent && item.permissions?.canDelete;
@@ -167,7 +174,29 @@ const Timeline = ({
                         ) : null}
                       </div>
 
-                      {item.body ? <p>{item.body}</p> : null}
+                      {item.body && !bodyIsVideoUrl ? <p>{item.body}</p> : null}
+
+                      {contentVideo ? (
+                        <div className="content-video">
+                          <div className="content-video__frame">
+                            <iframe
+                              src={contentVideo.embed.src}
+                              title={item.title}
+                              loading="lazy"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
+                          <a
+                            className="content-video__source"
+                            href={contentVideo.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            فتح الفيديو في نافذة جديدة
+                          </a>
+                        </div>
+                      ) : null}
 
                       <AttachmentList attachments={item.attachments} compact />
 
