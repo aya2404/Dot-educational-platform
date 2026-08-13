@@ -270,8 +270,9 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
 
                 <form className="d-flex flex-column gap-3" onSubmit={handleCreateUser}>
                   <div>
-                    <label className="form-label">الاسم الكامل</label>
+                    <label className="form-label" htmlFor="new-user-name">الاسم الكامل</label>
                     <input
+                      id="new-user-name"
                       type="text"
                       className="form-control"
                       value={newUser.name}
@@ -283,8 +284,9 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
                   </div>
 
                   <div>
-                    <label className="form-label">الدور</label>
+                    <label className="form-label" htmlFor="new-user-role">الدور</label>
                     <select
+                      id="new-user-role"
                       className="form-select"
                       value={newUser.role}
                       onChange={(event) =>
@@ -301,8 +303,9 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
                   </div>
 
                   <div>
-                    <label className="form-label">كلمة المرور</label>
+                    <label className="form-label" htmlFor="new-user-password">كلمة المرور</label>
                     <input
+                      id="new-user-password"
                       type="password"
                       className="form-control"
                       value={newUser.password}
@@ -415,8 +418,9 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
 
             <form className="d-flex flex-column gap-3" onSubmit={handleEnrollStudent}>
               <div>
-                <label className="form-label">الطالب</label>
+                <label className="form-label" htmlFor="enroll-student">الطالب</label>
                 <select
+                  id="enroll-student"
                   className="form-select"
                   value={enrollmentForm.studentId}
                   onChange={(event) =>
@@ -437,8 +441,9 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
               </div>
 
               <div>
-                <label className="form-label">الكورس</label>
+                <label className="form-label" htmlFor="enroll-course">الكورس</label>
                 <select
+                  id="enroll-course"
                   className="form-select"
                   value={enrollmentForm.courseId}
                   onChange={(event) =>

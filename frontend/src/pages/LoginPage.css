@@ -65,38 +65,12 @@
   color: transparent;
 }
 
-.login-card input[type="password"],
-.login-card input[type="text"] {
-  width: 100%;
-  padding: 14px 18px;
-  margin-bottom: 20px;
-  border-radius: 22px 16px 26px 18px;
-  border: 1px solid rgba(32, 63, 154, 0.12);
-  background: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.login-card input:focus {
-  outline: none;
-  border-color: var(--color-primary, #6d5acf);
-  box-shadow: 0 0 0 4px rgba(109, 90, 207, 0.15);
-  background: white;
-}
-
-.btn-primary {
-  background: #6d5acf;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 40px;
-  font-weight: 600;
-  transition: 0.2s;
-}
-
-.btn-primary:hover {
-  background: #5a46c0;
-  transform: translateY(-2px);
-}
+/*
+ * Note: inputs and the primary button intentionally inherit the shared design
+ * system (.form-control / .btn-primary in global.css) so the login screen stays
+ * visually consistent with the rest of the app. Page-scoped overrides used to
+ * live here but were unscoped global selectors that fought the design system.
+ */
 
 @media (max-width: 575.98px) {
   .login-screen {

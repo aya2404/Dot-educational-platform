@@ -3,11 +3,13 @@ import { BsCheckCircle, BsSend, BsTrash3, BsXLg } from 'react-icons/bs';
 import api from '../../utils/api';
 import { normalizeAttachments } from '../../utils/attachments';
 import { formatDueDate, isDueDatePassed } from '../../utils/contentTypes';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import ConfirmModal from '../common/ConfirmModal';
 import FileUploader from '../common/FileUploader';
 import './TaskSubmissionModal.css';
 
 const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
+  const dialogRef = useFocusTrap(true);
   const [answer, setAnswer] = useState(existingSubmission?.answer || '');
   const [attachments, setAttachments] = useState(normalizeAttachments(existingSubmission?.attachments));
   const [isLoading, setIsLoading] = useState(false);
@@ -21,10 +23,21 @@ const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
 
+    const handleKeyDown = (event) => {
+      // When the nested delete-confirmation dialog is open, let it own Escape so a
+      // single press closes only the topmost dialog, not this modal underneath it.
+      if (event.key === 'Escape' && !showDeleteConfirm) {
+        onClose(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onClose, showDeleteConfirm]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -77,7 +90,15 @@ const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
 
   return (
     <div className="theme-modal-backdrop" onClick={() => onClose(false)}>
-      <div className="theme-modal theme-modal--wide" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="theme-modal theme-modal--wide"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={task.title}
+        ref={dialogRef}
+        tabIndex={-1}
+      >
         <div className="theme-modal__header">
           <div className="d-flex align-items-start gap-3">
             <div className="theme-modal__icon">
@@ -88,7 +109,12 @@ const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
             </div>
           </div>
 
-          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => onClose(false)}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => onClose(false)}
+            aria-label="إغلاق"
+          >
             <BsXLg size={14} />
           </button>
         </div>
