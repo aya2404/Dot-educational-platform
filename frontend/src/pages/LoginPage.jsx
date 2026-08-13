@@ -51,7 +51,7 @@ const LoginPage = () => {
         <section className="login-shell__form">
           <div className="login-card">
             <div className="mb-4">
-              <h2 className="login-card__title">تسجيل الدخول</h2>
+              <h1 className="login-card__title">تسجيل الدخول</h1>
             </div>
 
             {error ? <div className="alert alert-danger">{error}</div> : null}

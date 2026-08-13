@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BsExclamationTriangle } from 'react-icons/bs';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 const ConfirmModal = ({
   open,
@@ -11,6 +12,7 @@ const ConfirmModal = ({
   onCancel,
   loading,
 }) => {
+  const dialogRef = useFocusTrap(open);
   useEffect(() => {
     if (!open) {
       return undefined;
@@ -18,10 +20,19 @@ const ConfirmModal = ({
 
     document.body.style.overflow = 'hidden';
 
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !loading) {
+        onCancel?.();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open]);
+  }, [open, loading, onCancel]);
 
   if (!open) {
     return null;
@@ -29,7 +40,15 @@ const ConfirmModal = ({
 
   return (
     <div className="theme-modal-backdrop" onClick={onCancel}>
-      <div className="theme-modal" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="theme-modal"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        ref={dialogRef}
+        tabIndex={-1}
+      >
         <div className="theme-modal__header">
           <div className="theme-modal__icon">
             <BsExclamationTriangle size={20} />

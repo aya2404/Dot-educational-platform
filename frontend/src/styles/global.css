@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+/* Fonts (Cairo, IBM Plex Sans Arabic, Manrope) are loaded once via the
+   preconnected <link> in public/index.html — no render-blocking @import here. */
 
 :root {
   --dj-primary: #203f9a;
@@ -558,54 +559,9 @@ a {
   color: var(--dj-text-muted);
 }
 
-/* =========================================================== TIMELINE  */
-.timeline-view {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-}
-
-.timeline-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.timeline-group__label {
-  align-self: flex-start;
-  padding: 6px 12px;
-  border-radius: 14px 20px 12px 18px;
-  background: linear-gradient(145deg, rgba(189, 207, 255, 0.3), rgba(231, 197, 255, 0.18));
-  font-weight: 700;
-  font-size: 0.75rem;
-}
-
-.timeline-group__items {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.timeline-entry {
-  padding: 16px 18px;
-  border-radius: 18px 26px 16px 22px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(32, 63, 154, 0.06);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-}
-
-.timeline-entry__body {
-  margin-top: 10px;
-  gap: 8px;
-}
-
-.timeline-entry__footer {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(32, 63, 154, 0.1);
-}
+/* Timeline styling lives in components/student/Timeline.css (single source of
+   truth). The duplicate block that used to live here overrode Timeline.css's
+   intended padding/spacing (load-order Frankenstein) and has been removed. */
 
 /* =========================================================== SHARED MODAL  */
 .theme-modal-backdrop {
@@ -731,10 +687,6 @@ a {
 
   .stack-list__item {
     padding: 10px 14px;
-  }
-
-  .timeline-entry {
-    padding: 12px 14px;
   }
 
   .theme-modal {

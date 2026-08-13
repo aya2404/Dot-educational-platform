@@ -205,8 +205,9 @@ const CreateContentPage = () => {
 
                     <div className="row g-3">
                       <div className="col-12 col-md-6">
-                        <label className="form-label">الكورس</label>
+                        <label className="form-label" htmlFor="content-course">الكورس</label>
                         <select
+                          id="content-course"
                           className="form-select"
                           value={form.courseId}
                           onChange={(event) => handleChange('courseId', event.target.value)}
@@ -222,8 +223,9 @@ const CreateContentPage = () => {
                       </div>
 
                       <div className="col-12 col-md-6">
-                        <label className="form-label">تاريخ الجلسة</label>
+                        <label className="form-label" htmlFor="content-date">تاريخ الجلسة</label>
                         <input
+                          id="content-date"
                           type="date"
                           className="form-control"
                           value={form.contentDate}
@@ -251,8 +253,9 @@ const CreateContentPage = () => {
                     </div>
 
                     <div>
-                      <label className="form-label">العنوان</label>
+                      <label className="form-label" htmlFor="content-title">العنوان</label>
                       <input
+                        id="content-title"
                         type="text"
                         className="form-control"
                         value={form.title}
@@ -262,8 +265,9 @@ const CreateContentPage = () => {
                     </div>
 
                     <div>
-                      <label className="form-label">الوصف أو التفاصيل</label>
+                      <label className="form-label" htmlFor="content-body">الوصف أو التفاصيل</label>
                       <textarea
+                        id="content-body"
                         className="form-control"
                         rows={5}
                         value={form.body}
@@ -326,8 +330,9 @@ const CreateContentPage = () => {
                     {form.type === 'task' ? (
                       <div className="row g-3">
                         <div className="col-12 col-md-6">
-                          <label className="form-label">موعد التسليم</label>
+                          <label className="form-label" htmlFor="content-due-date">موعد التسليم</label>
                           <input
+                            id="content-due-date"
                             type="date"
                             className="form-control"
                             value={form.dueDate}
@@ -336,8 +341,9 @@ const CreateContentPage = () => {
                           />
                         </div>
                         <div className="col-12 col-md-6">
-                          <label className="form-label">الدرجة القصوى</label>
+                          <label className="form-label" htmlFor="content-max-score">الدرجة القصوى</label>
                           <input
+                            id="content-max-score"
                             type="number"
                             className="form-control"
                             min={1}
