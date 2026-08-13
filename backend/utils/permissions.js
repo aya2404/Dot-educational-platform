@@ -71,9 +71,10 @@ const getContentPermissions = ({ user, content, course }) => {
   };
 };
 
-const getSubmissionPermissions = ({ user, submission, task }) => {
+const getSubmissionPermissions = ({ user, submission, task, course }) => {
   const isOwner = ownsResource(user, submission?.student);
   const isManager = userHasManagerPrivileges(user);
+  const isCourseTeacher = isAssignedCourseTeacher(user, course);
   const isWindowOpen = isSubmissionWindowOpen(task);
   const canOwnerManage = user?.role === 'student' && isOwner && isWindowOpen;
 
@@ -83,6 +84,10 @@ const getSubmissionPermissions = ({ user, submission, task }) => {
     canEdit: isManager || canOwnerManage,
     canDelete: isManager || canOwnerManage,
     canManageAttachments: isManager || canOwnerManage,
+    // Grading is a manager (admin/superadmin) or the assigned course teacher
+    // only — never the submitting student. `course` is optional; when it is
+    // not supplied (e.g. a student viewing their own submission) this is false.
+    canGrade: isManager || isCourseTeacher,
   };
 };
 

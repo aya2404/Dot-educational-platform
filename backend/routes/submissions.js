@@ -5,6 +5,7 @@ const {
   submitTask,
   getMySubmissions,
   getTaskSubmissions,
+  gradeSubmission,
   deleteSubmission,
   getStudentTaskStatus,
 } = require('../controllers/submissionController');
@@ -16,6 +17,7 @@ router.get('/my', authorize('student'), getMySubmissions);
 
 router.get('/status/:courseId', authorize('student'), getStudentTaskStatus);
 router.get('/task/:taskId', authorize('teacher', 'admin', 'superadmin'), getTaskSubmissions);
+router.patch('/:id/grade', authorize('teacher', 'admin', 'superadmin'), gradeSubmission);
 router.delete('/:id', deleteSubmission);
 
 module.exports = router;

@@ -1,0 +1,125 @@
+.submission-review__subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--dj-muted, #6b7280);
+}
+
+.submission-review__body {
+  padding: 4px 0 8px;
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+.submission-review__summary {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dj-primary, #203f9a);
+  margin-bottom: 12px;
+}
+
+.submission-review__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.submission-review__row {
+  border: 1px solid rgba(32, 63, 154, 0.14);
+  border-radius: 16px 20px 14px 18px;
+  padding: 14px 16px;
+  background: rgba(189, 207, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.submission-review__row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.submission-review__student {
+  font-weight: 700;
+  color: var(--dj-primary, #203f9a);
+}
+
+.submission-review__student-id {
+  margin-inline-start: 8px;
+  font-size: 0.78rem;
+  color: var(--dj-muted, #6b7280);
+}
+
+.submission-review__badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.submission-review__badge.is-graded {
+  background: #d1f0dd;
+  color: #1b7a45;
+}
+
+.submission-review__badge.is-submitted {
+  background: #e7c5ff;
+  color: #6b2fb3;
+}
+
+.submission-review__answer {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--dj-text, #1f2937);
+  font-size: 0.9rem;
+}
+
+.submission-review__grade-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.submission-review__grade-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 140px;
+}
+
+.submission-review__feedback-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.submission-review__grade-field span,
+.submission-review__feedback-field span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dj-muted, #6b7280);
+}
+
+.submission-review__row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.submission-review__saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1b7a45;
+}

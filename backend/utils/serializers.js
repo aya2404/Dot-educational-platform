@@ -49,11 +49,12 @@ const serializeSubmission = (submission, req, options = {}) => {
 
   const viewer = options.user || req?.user || null;
   const task = options.task || source.task;
+  const course = options.course || null;
 
   return {
     ...source,
     attachments: normalizeAttachmentArray(source.attachments, { req }),
-    permissions: getSubmissionPermissions({ user: viewer, submission: source, task }),
+    permissions: getSubmissionPermissions({ user: viewer, submission: source, task, course }),
   };
 };
 
