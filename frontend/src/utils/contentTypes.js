@@ -7,13 +7,29 @@ export const CONTENT_TYPES = {
     badgeClass:'badge-lecture',
     orderNum:1,
   },
+  video: {
+    label:'فيديو',
+    color:'#203F9A',
+    bgColor:'#CDE0FF',
+    textColor:'#203F9A',
+    badgeClass:'badge-video',
+    orderNum:2,
+  },
   material: {
     label:'مادة تعليمية',
     color:'#203F9A',
     bgColor:'#B8C0FF',
     textColor:'#203F9A',
     badgeClass:'badge-material',
-    orderNum:2,
+    orderNum:3,
+  },
+  link: {
+    label:'مصدر خارجي',
+    color:'#203F9A',
+    bgColor:'#D8CCFB',
+    textColor:'#203F9A',
+    badgeClass:'badge-link',
+    orderNum:4,
   },
   task: {
     label:'مهمة',
@@ -21,7 +37,7 @@ export const CONTENT_TYPES = {
     bgColor:'#C8B6FE',
     textColor:'#203F9A',
     badgeClass:'badge-task',
-    orderNum:   3,
+    orderNum:   5,
   },
   announcement: {
     label:'إعلان',
@@ -29,7 +45,7 @@ export const CONTENT_TYPES = {
     bgColor:'#E7C5FF',
     textColor:'#203F9A',
     badgeClass:'badge-announcement',
-    orderNum:4,
+    orderNum:6,
   },
 };
 
