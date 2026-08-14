@@ -35,6 +35,7 @@ const INITIAL_FORM = {
   dueDate: '',
   maxScore: 100,
   attachments: [],
+  isPublished: true,
 };
 
 const CreateContentPage = () => {
@@ -82,6 +83,7 @@ const CreateContentPage = () => {
             dueDate: getDateInputValue(currentContent.dueDate),
             maxScore: currentContent.maxScore || 100,
             attachments: normalizeAttachments(currentContent.attachments),
+            isPublished: currentContent.isPublished !== false, // undefined/true => published
           });
           return;
         }
@@ -151,6 +153,7 @@ const CreateContentPage = () => {
       dueDate: form.type === 'task' ? form.dueDate : undefined,
       maxScore: form.type === 'task' ? Number(form.maxScore) : undefined,
       attachments: normalizeAttachments(form.attachments),
+      isPublished: form.isPublished,
     };
 
     try {
@@ -366,6 +369,20 @@ const CreateContentPage = () => {
                         </div>
                       </div>
                     ) : null}
+
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="content-is-published"
+                        checked={form.isPublished}
+                        onChange={(event) => handleChange('isPublished', event.target.checked)}
+                        disabled={isSubmitting}
+                      />
+                      <label className="form-check-label" htmlFor="content-is-published">
+                        نشر المحتوى مباشرة للطلاب (اترك الخيار فارغاً لحفظه كمسودة)
+                      </label>
+                    </div>
 
                     <div className="d-flex justify-content-end gap-2">
                       <button

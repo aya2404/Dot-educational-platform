@@ -137,6 +137,7 @@ const markLectureComplete = async (req, res) => {
       _id: lectureId,
       course: courseId,
       type: 'lecture',
+      isPublished: { $ne: false }, // a student cannot complete a draft lecture
     }).select('_id');
 
     if (!lecture) {
