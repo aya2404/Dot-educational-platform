@@ -4,6 +4,8 @@ const Enrollment = require('../models/Enrollment');
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Content = require('../models/Content');
+const Submission = require('../models/Submission');
+const { isSubmissionWindowOpen } = require('../utils/permissions');
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 const enrollStudent = async (req, res) => {
@@ -199,8 +201,71 @@ const getStudentProgress = async (req, res) => {
   }
 };
 
+// Parameter-free upcoming-deadlines feed for the authenticated student. Derives
+// the accessible courses ONLY from the student's own active enrollments and
+// returns published, dated tasks — no courseId/studentId is ever accepted, so
+// there is no IDOR surface. Overdue is derived from the authoritative
+// isSubmissionWindowOpen (same rule that enforces submission), never a competing
+// calculation. Presentation-only grouping (today/tomorrow/…) is left to the UI.
+const getMyDeadlines = async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({
+      student: req.user._id,
+      isActive: true,
+    }).populate('course', 'name');
+
+    const activeCourses = enrollments.filter((enrollment) => enrollment.course);
+    const courseIds = activeCourses.map((enrollment) => enrollment.course._id);
+    const courseNameById = new Map(
+      activeCourses.map((enrollment) => [enrollment.course._id.toString(), enrollment.course.name])
+    );
+
+    if (courseIds.length === 0) {
+      return res.json({ success: true, count: 0, data: [] });
+    }
+
+    // Published, dated tasks in the student's enrolled courses. `{ $ne: null }`
+    // excludes tasks with a missing/null dueDate; `{ $ne: false }` keeps
+    // published and legacy (no field) content while hiding drafts.
+    const tasks = await Content.find({
+      course: { $in: courseIds },
+      type: 'task',
+      isPublished: { $ne: false },
+      dueDate: { $ne: null },
+    })
+      .select('title course dueDate maxScore')
+      .sort({ dueDate: 1 });
+
+    // The current student's submission status for these tasks (single query).
+    const submissions = await Submission.find({
+      task: { $in: tasks.map((task) => task._id) },
+      student: req.user._id,
+    }).select('task status');
+    const statusByTask = new Map(
+      submissions.map((submission) => [submission.task.toString(), submission.status])
+    );
+
+    const data = tasks.map((task) => ({
+      taskId: task._id,
+      courseId: task.course,
+      courseName: courseNameById.get(task.course.toString()) || '',
+      title: task.title,
+      dueDate: task.dueDate,
+      maxScore: task.maxScore,
+      submissionStatus: statusByTask.get(task._id.toString()) || 'not_submitted',
+      isPastDeadline: !isSubmissionWindowOpen(task),
+    }));
+
+    return res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    console.error('getMyDeadlines error:', error);
+    return res.status(500).json({ success: false, message: 'خطأ في الخادم' });
+  }
+};
+
 module.exports = {
   enrollStudent,
+  getMyDeadlines,
   getMyEnrollments,
   getStudentProgress,
   markLectureComplete,
