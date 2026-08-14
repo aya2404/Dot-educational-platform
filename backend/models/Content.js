@@ -56,6 +56,15 @@ const contentSchema = new mongoose.Schema
       type:    Number,
       default: 100,
     },
+
+    // Publication state. Defaults to true so newly created content is live and,
+    // combined with a `{ $ne: false }` student read filter, pre-existing records
+    // (which have no field) remain published — no migration required. Only an
+    // explicit `false` marks a draft that students must never see.
+    isPublished: {
+      type:    Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true, 

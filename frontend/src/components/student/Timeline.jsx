@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import {
   BsCheck2Circle,
   BsClipboardCheck,
+  BsCloudArrowUp,
   BsCollectionPlay,
+  BsEyeSlash,
   BsFolder2Open,
   BsLink45Deg,
   BsMegaphone,
@@ -43,10 +45,14 @@ const Timeline = ({
   onRefreshSubmissions,
   onDeleteContent,
   onEditContent,
+  onTogglePublish,
 }) => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [reviewTask, setReviewTask] = useState(null);
   const [itemPendingDelete, setItemPendingDelete] = useState(null);
+  const [itemPendingUnpublish, setItemPendingUnpublish] = useState(null);
+  const [togglingPublishId, setTogglingPublishId] = useState('');
+  const [isUnpublishing, setIsUnpublishing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [actionError, setActionError] = useState('');
 
@@ -81,6 +87,29 @@ const Timeline = ({
     }
   };
 
+  const runTogglePublish = async (item, nextPublished) => {
+    if (typeof onTogglePublish !== 'function') return;
+    setTogglingPublishId(item._id);
+    setActionError('');
+    try {
+      await onTogglePublish(item, nextPublished);
+    } catch (requestError) {
+      setActionError(requestError.response?.data?.message || 'تعذر تحديث حالة النشر');
+    } finally {
+      setTogglingPublishId('');
+    }
+  };
+
+  const handlePublish = (item) => runTogglePublish(item, true); // draft -> publish (direct)
+
+  const handleConfirmUnpublish = async () => {
+    if (!itemPendingUnpublish) return;
+    setIsUnpublishing(true);
+    await runTogglePublish(itemPendingUnpublish, false);
+    setIsUnpublishing(false);
+    setItemPendingUnpublish(null);
+  };
+
   if (sortedDates.length === 0) {
     return (
       <div className="surface-card">
@@ -111,6 +140,9 @@ const Timeline = ({
                 const isPastDeadline = item.type === 'task' && isDueDatePassed(item.dueDate);
                 const canEditContent = !isStudent && item.permissions?.canEdit;
                 const canDeleteContent = !isStudent && item.permissions?.canDelete;
+                const canManagePublish = !isStudent && item.permissions?.canEdit;
+                const isDraft = item.isPublished === false; // undefined/true => published
+                const isTogglingPublish = togglingPublishId === item._id;
                 const canManageSubmission = submission
                   ? submission.permissions?.canEdit
                   : !isPastDeadline;
@@ -125,9 +157,16 @@ const Timeline = ({
                 return (
                   <article key={item._id} className="timeline-entry">
                     <div className="timeline-entry__header">
-                      <div className="timeline-entry__type" style={{ backgroundColor: typeConfig.bgColor }}>
-                        <Icon size={15} />
-                        <span>{typeConfig.label}</span>
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="timeline-entry__type" style={{ backgroundColor: typeConfig.bgColor }}>
+                          <Icon size={15} />
+                          <span>{typeConfig.label}</span>
+                        </div>
+                        {!isStudent && isDraft ? (
+                          <span className="timeline-entry__draft-badge">
+                            <BsEyeSlash size={12} /> مسودة
+                          </span>
+                        ) : null}
                       </div>
 
                       <div className="timeline-entry__header-actions">
@@ -140,6 +179,30 @@ const Timeline = ({
                             <BsCheck2Circle size={14} />
                             {isCompleted ? 'تمت المتابعة' : 'تحديد كمكتمل'}
                           </button>
+                        ) : null}
+
+                        {canManagePublish ? (
+                          isDraft ? (
+                            <button
+                              type="button"
+                              className="btn btn-outline-success btn-sm"
+                              onClick={() => handlePublish(item)}
+                              disabled={isTogglingPublish}
+                            >
+                              <BsCloudArrowUp size={14} />
+                              {isTogglingPublish ? '...' : 'نشر'}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-outline-secondary btn-sm"
+                              onClick={() => setItemPendingUnpublish(item)}
+                              disabled={isTogglingPublish}
+                            >
+                              <BsEyeSlash size={14} />
+                              {isTogglingPublish ? '...' : 'إلغاء النشر'}
+                            </button>
+                          )
                         ) : null}
 
                         {canEditContent ? (
@@ -295,6 +358,21 @@ const Timeline = ({
         loading={isDeleting}
         onCancel={() => !isDeleting && setItemPendingDelete(null)}
         onConfirm={handleDeleteContent}
+      />
+
+      <ConfirmModal
+        open={Boolean(itemPendingUnpublish)}
+        title="إلغاء نشر المحتوى"
+        message={
+          itemPendingUnpublish
+            ? `سيتم تحويل "${itemPendingUnpublish.title}" إلى مسودة ولن يعود مرئياً للطلاب حتى إعادة نشره.`
+            : ''
+        }
+        confirmText="إلغاء النشر"
+        cancelText="تراجع"
+        loading={isUnpublishing}
+        onCancel={() => !isUnpublishing && setItemPendingUnpublish(null)}
+        onConfirm={handleConfirmUnpublish}
       />
     </>
   );

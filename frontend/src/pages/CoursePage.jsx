@@ -91,6 +91,12 @@ const CoursePage = () => {
     setContent((current) => current.filter((item) => item._id !== contentId));
   };
 
+  const handleTogglePublish = async (item, nextPublished) => {
+    const response = await api.put(`/content/${item._id}`, { isPublished: nextPublished });
+    const updated = response.data.data;
+    setContent((current) => current.map((entry) => (entry._id === updated._id ? updated : entry)));
+  };
+
   return (
     <AppLayout>
       <div className="app-page" style={{ gap: '16px' }}>
@@ -184,6 +190,7 @@ const CoursePage = () => {
               onRefreshSubmissions={fetchSubmissions}
               onDeleteContent={handleDeleteContent}
               onEditContent={(item) => navigate(getEditContentPath(user?.role, item._id))}
+              onTogglePublish={handleTogglePublish}
             />
           </>
         )}

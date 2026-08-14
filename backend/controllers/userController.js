@@ -139,13 +139,62 @@ const updateUser = async (req, res) => {
       });
     }
 
+    // Guard the activation flag transition. Activation and idempotent no-ops are
+    // always allowed; only an active -> inactive transition is protected.
+    const nextActive = typeof isActive !== 'undefined' ? Boolean(isActive) : user.isActive;
+    const isDeactivating = user.isActive === true && nextActive === false;
+
+    if (isDeactivating) {
+      // An administrator must not be able to deactivate their own account.
+      if (user._id.toString() === req.user._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: 'لا يمكنك تعطيل حسابك الحالي',
+        });
+      }
+
+      // The system must always retain at least one active superadmin.
+      if (user.role === 'superadmin') {
+        const otherActiveSuperadmins = await User.countDocuments({
+          role: 'superadmin',
+          isActive: true,
+          _id: { $ne: user._id },
+        });
+
+        if (otherActiveSuperadmins === 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'يجب أن يبقى مشرف رئيسي واحد فعّال على الأقل',
+          });
+        }
+      }
+    }
+
     if (name) user.name = name.trim();
     if (username) user.username = username.trim().toLowerCase();
     if (password) user.password = password;
-    if (typeof isActive !== 'undefined') user.isActive = Boolean(isActive);
+    if (typeof isActive !== 'undefined') user.isActive = nextActive;
     if (typeof avatar === 'string') user.avatar = avatar.trim();
 
     await user.save();
+
+    // Compensating post-write re-check: two concurrent deactivations of two
+    // different superadmins could each pass the pre-check (each seeing the other
+    // still active) and both write, leaving zero active superadmins. After the
+    // write, re-assert the invariant and roll back if it was violated. Whichever
+    // request observes the violation restores an active superadmin, so at least
+    // one always remains (no cross-document transaction required).
+    if (isDeactivating && user.role === 'superadmin') {
+      const activeSuperadmins = await User.countDocuments({ role: 'superadmin', isActive: true });
+      if (activeSuperadmins === 0) {
+        user.isActive = true;
+        await user.save();
+        return res.status(409).json({
+          success: false,
+          message: 'يجب أن يبقى مشرف رئيسي واحد فعّال على الأقل',
+        });
+      }
+    }
 
     return res.json({
       success: true,

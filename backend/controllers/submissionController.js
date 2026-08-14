@@ -25,7 +25,9 @@ const submitTask = async (req, res) => {
 
     const task = await Content.findById(taskId);
 
-    if (!task || task.type !== 'task') {
+    // A draft task must be invisible to students — treat it as non-existent so a
+    // student cannot submit against unpublished work by sending its ID directly.
+    if (!task || task.type !== 'task' || task.isPublished === false) {
       return res.status(404).json({ success: false, message: 'المهمة غير موجودة' });
     }
 
@@ -283,9 +285,12 @@ const getStudentTaskStatus = async (req, res) => {
       });
     }
 
+    // Student-facing: exclude draft tasks so their statuses/IDs never surface
+    // (published or legacy records only; explicit drafts filtered out).
     const tasks = await Content.find({
       course: access.course._id,
       type: 'task',
+      isPublished: { $ne: false },
     }).select('_id dueDate');
 
     const submissions = await Submission.find({

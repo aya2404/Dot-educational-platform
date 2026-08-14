@@ -11,6 +11,13 @@ const TYPE_ORDER = { announcement: 1, lecture: 2, video: 3, material: 4, link: 5
 const VALID_TYPES = new Set(Object.keys(TYPE_ORDER));
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
+// A student may only ever see published content. `{ $ne: false }` matches
+// published (true) and legacy records with no field (undefined), hiding only
+// explicit drafts (false). Staff (teacher owner / admin / superadmin) see all.
+const isStudentViewer = (user) => user?.role === 'student';
+const PUBLISHED_ONLY = { isPublished: { $ne: false } };
+const isDraftContent = (content) => content?.isPublished === false;
+
 const getCourseContent = async (req, res) => {
   try {
     const access = await resolveCourseAccess({
@@ -25,7 +32,12 @@ const getCourseContent = async (req, res) => {
       });
     }
 
-    const content = await Content.find({ course: access.course._id })
+    const contentQuery = { course: access.course._id };
+    if (isStudentViewer(req.user)) {
+      Object.assign(contentQuery, PUBLISHED_ONLY); // students never receive drafts
+    }
+
+    const content = await Content.find(contentQuery)
       .populate('createdBy', 'name role')
       .sort({ contentDate: 1, order: 1, createdAt: 1 });
     const serializedContent = content.map((item) =>
@@ -76,6 +88,12 @@ const getContentById = async (req, res) => {
       });
     }
 
+    // A student must not retrieve a draft even with a valid ID — respond exactly
+    // as if it does not exist (no title/body/metadata leak). IDOR-safe.
+    if (isStudentViewer(req.user) && isDraftContent(content)) {
+      return res.status(404).json({ success: false, message: 'المحتوى غير موجود' });
+    }
+
     return res.json({
       success: true,
       data: serializeContent(content, req, { course: access.course }),
@@ -88,7 +106,7 @@ const getContentById = async (req, res) => {
 
 const createContent = async (req, res) => {
   try {
-    const { course, type, title, body, attachments, contentDate, dueDate, maxScore } = req.body;
+    const { course, type, title, body, attachments, contentDate, dueDate, maxScore, isPublished } = req.body;
 
     if (!course || !type || !title) {
       return res.status(400).json({
@@ -141,6 +159,9 @@ const createContent = async (req, res) => {
       order: TYPE_ORDER[type] || 1,
       dueDate: type === 'task' ? dueDate || null : null,
       maxScore: type === 'task' ? Number(maxScore) || 100 : 100,
+      // Only staff reach this endpoint (route RBAC). Omitted -> published by
+      // default; an explicit false creates a draft.
+      isPublished: typeof isPublished === 'undefined' ? true : Boolean(isPublished),
       createdBy: req.user._id,
     });
 
@@ -227,6 +248,9 @@ const updateContent = async (req, res) => {
     }
 
     if (typeof req.body.body === 'string') content.body = req.body.body;
+    // Publish / unpublish. Route RBAC already restricts this to staff and the
+    // ownership/canEdit check above guarantees only an authorized editor here.
+    if (typeof req.body.isPublished !== 'undefined') content.isPublished = Boolean(req.body.isPublished);
     if (typeof req.body.contentDate !== 'undefined') content.contentDate = req.body.contentDate;
     if (typeof req.body.dueDate !== 'undefined') content.dueDate = req.body.dueDate || null;
     if (typeof req.body.maxScore !== 'undefined') content.maxScore = Number(req.body.maxScore) || 100;

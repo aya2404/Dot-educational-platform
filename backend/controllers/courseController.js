@@ -9,8 +9,12 @@ const { resolveCourseAccess } = require('../utils/courseAccess');
 const { buildGradebook } = require('../utils/gradebook');
 
 // Shared loader: fetch a course's gradable tasks + the given students' submissions.
-const loadCourseTasksAndSubmissions = async (courseId, studentIds) => {
-  const tasks = await Content.find({ course: courseId, type: 'task' }).sort({
+// `publishedOnly` restricts to student-visible (published) tasks; the teacher
+// gradebook passes false so staff keep seeing draft tasks.
+const loadCourseTasksAndSubmissions = async (courseId, studentIds, { publishedOnly = false } = {}) => {
+  const taskFilter = { course: courseId, type: 'task' };
+  if (publishedOnly) taskFilter.isPublished = { $ne: false };
+  const tasks = await Content.find(taskFilter).sort({
     order: 1,
     contentDate: 1,
     createdAt: 1,
@@ -309,7 +313,8 @@ const getMyGradebook = async (req, res) => {
 
     const { tasks, submissions } = await loadCourseTasksAndSubmissions(
       access.course._id,
-      [req.user._id]
+      [req.user._id],
+      { publishedOnly: true } // students never see draft tasks in their gradebook
     );
 
     const gradebook = buildGradebook({
