@@ -59,13 +59,18 @@ const SubmissionReviewRow = ({ submission, maxScore, onGraded }) => {
             <span className="submission-review__student-id">{student.studentId}</span>
           ) : null}
         </div>
-        <span
-          className={`submission-review__badge ${
-            submission.status === 'graded' ? 'is-graded' : 'is-submitted'
-          }`}
-        >
-          {submission.status === 'graded' ? 'تم التقييم' : 'بانتظار التقييم'}
-        </span>
+        <div className="d-flex align-items-center gap-2">
+          {submission.isLate ? (
+            <span className="submission-review__badge is-late">متأخر</span>
+          ) : null}
+          <span
+            className={`submission-review__badge ${
+              submission.status === 'graded' ? 'is-graded' : 'is-submitted'
+            }`}
+          >
+            {submission.status === 'graded' ? 'تم التقييم' : 'بانتظار التقييم'}
+          </span>
+        </div>
       </div>
 
       {submission.answer ? <p className="submission-review__answer">{submission.answer}</p> : null}

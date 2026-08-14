@@ -123,3 +123,8 @@
   font-weight: 600;
   color: #1b7a45;
 }
+
+.submission-review__badge.is-late {
+  color: #b45309;
+  background: #fef3c7;
+}

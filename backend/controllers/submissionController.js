@@ -51,12 +51,9 @@ const submitTask = async (req, res) => {
       });
     }
 
-    if (!isSubmissionWindowOpen(task)) {
-      return res.status(403).json({
-        success: false,
-        message: 'انتهى موعد التسليم ولا يمكنك تعديل الإجابة الآن',
-      });
-    }
+    // Late submissions are ACCEPTED (not rejected) and flagged server-side.
+    // Authority is the existing isSubmissionWindowOpen — no second calculation.
+    const submittedLate = !isSubmissionWindowOpen(task);
 
     const safeAnswer = getSafeAnswer(answer);
     const safeAttachments = normalizeAttachmentArray(attachments);
@@ -85,6 +82,9 @@ const submitTask = async (req, res) => {
     submission.status = 'submitted';
     submission.feedback = '';
     submission.grade = undefined;
+    // Recomputed on every mutation from the authoritative deadline. Any client
+    // `req.body.isLate` is ignored — the server value always wins.
+    submission.isLate = submittedLate;
 
     await submission.save();
 

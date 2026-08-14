@@ -54,6 +54,8 @@ const serializeSubmission = (submission, req, options = {}) => {
   return {
     ...source,
     attachments: normalizeAttachmentArray(source.attachments, { req }),
+    // Server-derived; legacy submissions with no field serialize as false.
+    isLate: Boolean(source.isLate),
     permissions: getSubmissionPermissions({ user: viewer, submission: source, task, course }),
   };
 };

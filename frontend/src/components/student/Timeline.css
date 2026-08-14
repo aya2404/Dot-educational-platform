@@ -277,3 +277,17 @@
   border-radius: 999px;
   white-space: nowrap;
 }
+
+/* =========================================================== LATE BADGE */
+.timeline-entry__late-badge {
+  display: inline-block;
+  margin-inline-start: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid rgba(180, 83, 9, 0.28);
+  padding: 1px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}

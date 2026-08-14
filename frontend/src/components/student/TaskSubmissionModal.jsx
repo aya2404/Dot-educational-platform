@@ -16,9 +16,10 @@ const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const submissionLocked = existingSubmission
-    ? !existingSubmission.permissions?.canEdit
-    : isDueDatePassed(task?.dueDate);
+  // Late submissions are accepted and flagged server-side, so the deadline no
+  // longer locks the form — it only warns the student that this will be late.
+  const isPastDue = isDueDatePassed(task?.dueDate);
+  const willBeLate = isPastDue || existingSubmission?.isLate === true;
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -41,11 +42,6 @@ const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (submissionLocked) {
-      setError('انتهى موعد التسليم، ولا يمكن تعديل الإجابة الآن');
-      return;
-    }
 
     if (!answer.trim() && attachments.length === 0) {
       setError('أضف إجابة نصية أو ملفاً واحداً على الأقل قبل التسليم');
@@ -137,9 +133,9 @@ const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
         ) : (
           <form className="task-modal__form" onSubmit={handleSubmit}>
             {error ? <div className="alert alert-danger">{error}</div> : null}
-            {submissionLocked ? (
-              <div className="alert alert-secondary mb-0">
-                انتهى وقت التسليم. يمكنك مراجعة الإجابة الحالية فقط.
+            {willBeLate ? (
+              <div className="alert alert-warning mb-0">
+                انتهى الموعد المحدد لهذه المهمة. سيتم قبول تسليمك مع تسجيله كـ«متأخر» دون خصم من الدرجة.
               </div>
             ) : null}
 
@@ -151,14 +147,14 @@ const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
                 placeholder="اكتب الإجابة"
                 value={answer}
                 onChange={(event) => setAnswer(event.target.value)}
-                disabled={isLoading || submissionLocked}
+                disabled={isLoading}
               />
             </div>
 
             <FileUploader
               value={attachments}
               onChange={setAttachments}
-              disabled={isLoading || submissionLocked}
+              disabled={isLoading}
               label="ملفات التسليم"
             />
 
@@ -181,9 +177,15 @@ const TaskSubmissionModal = ({ task, existingSubmission, onClose }) => {
                 <button type="button" className="btn btn-outline-secondary" onClick={() => onClose(false)} disabled={isLoading}>
                   إلغاء
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={isLoading || submissionLocked}>
+                <button type="submit" className="btn btn-primary" disabled={isLoading}>
                   <BsSend size={16} />
-                  {isLoading ? 'جاري الحفظ...' : existingSubmission ? 'حفظ التعديلات' : 'تسليم المهمة'}
+                  {isLoading
+                    ? 'جاري الحفظ...'
+                    : existingSubmission
+                      ? 'حفظ التعديلات'
+                      : willBeLate
+                        ? 'تسليم متأخر'
+                        : 'تسليم المهمة'}
                 </button>
               </div>
             </div>
