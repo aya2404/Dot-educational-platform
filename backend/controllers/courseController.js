@@ -6,6 +6,21 @@ const Enrollment = require('../models/Enrollment');
 const Submission = require('../models/Submission');
 const User = require('../models/User');
 const { resolveCourseAccess } = require('../utils/courseAccess');
+const { buildGradebook } = require('../utils/gradebook');
+
+// Shared loader: fetch a course's gradable tasks + the given students' submissions.
+const loadCourseTasksAndSubmissions = async (courseId, studentIds) => {
+  const tasks = await Content.find({ course: courseId, type: 'task' }).sort({
+    order: 1,
+    contentDate: 1,
+    createdAt: 1,
+  });
+  const submissions = await Submission.find({
+    task: { $in: tasks.map((task) => task._id) },
+    student: { $in: studentIds },
+  });
+  return { tasks, submissions };
+};
 
 const validateTeacher = async (teacherId) => {
   if (!teacherId) {
@@ -232,11 +247,121 @@ const getCourseStudents = async (req, res) => {
   }
 };
 
+// Teacher/admin/superadmin course gradebook — every active student × task.
+const getCourseGradebook = async (req, res) => {
+  try {
+    const access = await resolveCourseAccess({
+      courseId: req.params.id,
+      user: req.user,
+      allowStudent: false,
+    });
+
+    if (!access.course) {
+      return res.status(access.statusCode).json({
+        success: false,
+        message: access.message,
+      });
+    }
+
+    const enrollments = await Enrollment.find({
+      course: access.course._id,
+      isActive: true,
+    }).populate('student', 'name username studentId');
+
+    const students = enrollments
+      .filter((enrollment) => enrollment.student)
+      .map((enrollment) => enrollment.student);
+
+    const { tasks, submissions } = await loadCourseTasksAndSubmissions(
+      access.course._id,
+      students.map((student) => student._id)
+    );
+
+    const gradebook = buildGradebook({ tasks, submissions, students });
+
+    return res.json({
+      success: true,
+      course: { id: access.course._id, name: access.course.name },
+      tasks: gradebook.tasks,
+      students: gradebook.rows,
+    });
+  } catch (error) {
+    console.error('getCourseGradebook error:', error);
+    return res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
+  }
+};
+
+// Student's own gradebook for a course they are actively enrolled in.
+const getMyGradebook = async (req, res) => {
+  try {
+    const access = await resolveCourseAccess({
+      courseId: req.params.id,
+      user: req.user,
+      allowStudent: true,
+    });
+
+    if (!access.course) {
+      return res.status(access.statusCode).json({
+        success: false,
+        message: access.message,
+      });
+    }
+
+    const { tasks, submissions } = await loadCourseTasksAndSubmissions(
+      access.course._id,
+      [req.user._id]
+    );
+
+    const gradebook = buildGradebook({
+      tasks,
+      submissions,
+      students: [{ _id: req.user._id, name: req.user.name, studentId: req.user.studentId }],
+    });
+
+    const row = gradebook.rows[0] || {
+      earnedPoints: 0,
+      possiblePoints: gradebook.possiblePoints,
+      percentage: gradebook.possiblePoints === 0 ? null : 0,
+      hasInvalidGrade: false,
+      tasks: [],
+    };
+
+    const defById = new Map(gradebook.tasks.map((def) => [def.id, def]));
+    const tasksMerged = row.tasks.map((cell) => {
+      const def = defById.get(cell.taskId) || {};
+      return {
+        taskId: cell.taskId,
+        title: def.title,
+        maxScore: def.maxScore,
+        dueDate: def.dueDate || null,
+        status: cell.status,
+        grade: cell.grade,
+        feedback: cell.feedback,
+      };
+    });
+
+    return res.json({
+      success: true,
+      course: { id: access.course._id, name: access.course.name },
+      earnedPoints: row.earnedPoints,
+      possiblePoints: row.possiblePoints,
+      percentage: row.percentage,
+      hasInvalidGrade: row.hasInvalidGrade || false,
+      tasks: tasksMerged,
+    });
+  } catch (error) {
+    console.error('getMyGradebook error:', error);
+    return res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
+  }
+};
+
 module.exports = {
   createCourse,
   deleteCourse,
   getAllCourses,
   getCourseById,
+  getCourseGradebook,
   getCourseStudents,
+  getMyGradebook,
   updateCourse,
 };

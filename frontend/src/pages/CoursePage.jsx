@@ -6,10 +6,13 @@ import {
   BsClockHistory,
   BsPerson,
   BsPlusSquare,
+  BsTable,
 } from 'react-icons/bs';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
 import Timeline from '../components/student/Timeline';
+import CourseGradeSummary from '../components/student/CourseGradeSummary';
+import GradebookModal from '../components/teacher/GradebookModal';
 import api from '../utils/api';
 import { getCreateContentPath, getEditContentPath } from '../utils/auth';
 
@@ -22,6 +25,7 @@ const CoursePage = () => {
   const [content, setContent] = useState([]);
   const [completedLectures, setCompletedLectures] = useState([]);
   const [submissions, setSubmissions] = useState({});
+  const [showGradebook, setShowGradebook] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -97,14 +101,24 @@ const CoursePage = () => {
           </button>
 
           {canManageContent && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => navigate(`${getCreateContentPath(user?.role)}?courseId=${courseId}`)}
-            >
-              <BsPlusSquare size={16} />
-              إضافة محتوى جديد
-            </button>
+            <>
+              <button
+                type="button"
+                className="btn btn-outline-primary"
+                onClick={() => setShowGradebook(true)}
+              >
+                <BsTable size={16} />
+                دفتر الدرجات
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => navigate(`${getCreateContentPath(user?.role)}?courseId=${courseId}`)}
+              >
+                <BsPlusSquare size={16} />
+                إضافة محتوى جديد
+              </button>
+            </>
           )}
         </div>
 
@@ -158,6 +172,8 @@ const CoursePage = () => {
               </div>
             </section>
 
+            {isStudent && <CourseGradeSummary courseId={courseId} />}
+
             <Timeline
               content={content}
               currentUser={user}
@@ -172,6 +188,10 @@ const CoursePage = () => {
           </>
         )}
       </div>
+
+      {showGradebook && course && (
+        <GradebookModal course={course} onClose={() => setShowGradebook(false)} />
+      )}
     </AppLayout>
   );
 };

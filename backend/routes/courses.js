@@ -8,6 +8,8 @@ const {
   updateCourse,
   deleteCourse,
   getCourseStudents,
+  getCourseGradebook,
+  getMyGradebook,
 } = require('../controllers/courseController');
 
 //all course routes require auth
@@ -23,5 +25,8 @@ router.route('/:id')
   .delete(authorize('superadmin'), deleteCourse);
 
 router.get('/:id/students', authorize('teacher', 'admin', 'superadmin'), getCourseStudents);
+
+router.get('/:id/gradebook', authorize('teacher', 'admin', 'superadmin'), getCourseGradebook);
+router.get('/:id/my-gradebook', authorize('student'), getMyGradebook);
 
 module.exports = router;
