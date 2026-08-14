@@ -6,27 +6,42 @@ const Course = require('../models/Course');
 const Content = require('../models/Content');
 const Submission = require('../models/Submission');
 const { isSubmissionWindowOpen } = require('../utils/permissions');
+const { resolveCourseAccess } = require('../utils/courseAccess');
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 const enrollStudent = async (req, res) => {
   try {
-    const { studentId, courseId } = req.body;
+    const { studentId, courseId, identifier } = req.body;
 
-    if (!studentId || !courseId) {
+    if (!courseId || (!studentId && !identifier)) {
       return res.status(400).json({
         success: false,
         message: 'معرف الطالب والكورس مطلوبان',
       });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(studentId) || !mongoose.Types.ObjectId.isValid(courseId)) {
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
       return res.status(400).json({
         success: false,
         message: 'معرف الطالب أو الكورس غير صالح',
       });
     }
 
-    const student = await User.findById(studentId);
+    // Resolve the student either by Mongo _id (existing manager flow, unchanged)
+    // or by a human identifier (studentId code / username) for the teacher UI,
+    // which has no access to the full user directory.
+    let student = null;
+    if (studentId) {
+      if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        return res.status(400).json({ success: false, message: 'معرف الطالب أو الكورس غير صالح' });
+      }
+      student = await User.findById(studentId);
+    } else {
+      const lookup = String(identifier).trim();
+      student = await User.findOne({
+        $or: [{ studentId: lookup }, { username: lookup.toLowerCase() }],
+      });
+    }
 
     if (!student) {
       return res.status(404).json({ success: false, message: 'الطالب غير موجود' });
@@ -40,15 +55,22 @@ const enrollStudent = async (req, res) => {
       return res.status(400).json({ success: false, message: 'حساب الطالب معطل' });
     }
 
-    const course = await Course.findById(courseId);
+    // Authorize against the target course's ownership: a teacher may enroll only
+    // into a course they own; managers may enroll into any. Never trust a
+    // body-supplied owner — the course owner comes from the DB via req.user.
+    const access = await resolveCourseAccess({
+      courseId,
+      user: req.user,
+      allowStudent: false,
+    });
 
-    if (!course) {
-      return res.status(404).json({ success: false, message: 'الكورس غير موجود' });
+    if (!access.course) {
+      return res.status(access.statusCode).json({ success: false, message: access.message });
     }
 
     const enrollment = await Enrollment.create({
-      student: studentId,
-      course: courseId,
+      student: student._id,
+      course: access.course._id,
     });
 
     return res.status(201).json({ success: true, data: enrollment });
@@ -71,11 +93,25 @@ const unenrollStudent = async (req, res) => {
       return res.status(400).json({ success: false, message: 'معرف التسجيل غير صالح' });
     }
 
-    const enrollment = await Enrollment.findByIdAndDelete(req.params.id);
+    const enrollment = await Enrollment.findById(req.params.id);
 
     if (!enrollment) {
       return res.status(404).json({ success: false, message: 'التسجيل غير موجود' });
     }
+
+    // The enrollment ID alone is NOT authorization. Resolve the enrollment's
+    // course and verify ownership before deleting — closes enrollment-ID IDOR.
+    const access = await resolveCourseAccess({
+      courseId: enrollment.course,
+      user: req.user,
+      allowStudent: false,
+    });
+
+    if (!access.course) {
+      return res.status(access.statusCode).json({ success: false, message: access.message });
+    }
+
+    await enrollment.deleteOne();
 
     return res.json({ success: true, message: 'تم إلغاء تسجيل الطالب' });
   } catch (error) {

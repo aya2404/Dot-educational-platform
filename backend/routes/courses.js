@@ -16,13 +16,13 @@ const {
 router.use(protect);
 
 router.route('/')
-  .get(getAllCourses) 
-  .post(authorize('superadmin'), createCourse);
+  .get(getAllCourses)
+  .post(authorize('teacher', 'admin', 'superadmin'), createCourse);
 
 router.route('/:id')
   .get(getCourseById)
-  .put(authorize('superadmin'), updateCourse)
-  .delete(authorize('superadmin'), deleteCourse);
+  .put(authorize('teacher', 'admin', 'superadmin'), updateCourse)
+  .delete(authorize('teacher', 'admin', 'superadmin'), deleteCourse);
 
 router.get('/:id/students', authorize('teacher', 'admin', 'superadmin'), getCourseStudents);
 

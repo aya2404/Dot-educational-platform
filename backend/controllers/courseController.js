@@ -106,19 +106,27 @@ const createCourse = async (req, res) => {
       return res.status(400).json({ success: false, message: 'اسم الكورس مطلوب' });
     }
 
-    const teacherValidation = await validateTeacher(teacher);
+    // A teacher always owns the course they create — the body `teacher` is
+    // ignored so a teacher can never create a course owned by someone else.
+    // Managers (admin/superadmin) keep the existing assign-and-validate flow.
+    let ownerTeacherId = req.user._id;
+    if (req.user.role !== 'teacher') {
+      const teacherValidation = await validateTeacher(teacher);
 
-    if (!teacherValidation.teacher && teacherValidation.message) {
-      return res.status(teacherValidation.statusCode).json({
-        success: false,
-        message: teacherValidation.message,
-      });
+      if (!teacherValidation.teacher && teacherValidation.message) {
+        return res.status(teacherValidation.statusCode).json({
+          success: false,
+          message: teacherValidation.message,
+        });
+      }
+
+      ownerTeacherId = teacher;
     }
 
     const course = await Course.create({
       name: name.trim(),
       description: description?.trim() || '',
-      teacher,
+      teacher: ownerTeacherId,
       group: group?.trim() || '',
       time: time?.trim() || '',
       days: Array.isArray(days) ? days : [],
@@ -152,6 +160,20 @@ const updateCourse = async (req, res) => {
 
     const { name, description, teacher, group, time, days, startDate } = req.body;
 
+    const course = access.course;
+
+    // A teacher may never transfer ownership. Reject any attempt to set the
+    // owner to anyone other than the current owner (their own account).
+    if (req.user.role === 'teacher' && typeof teacher !== 'undefined') {
+      const currentOwnerId = course.teacher?._id?.toString() || course.teacher?.toString() || '';
+      if (String(teacher) !== currentOwnerId) {
+        return res.status(403).json({
+          success: false,
+          message: 'لا يمكنك نقل ملكية الكورس إلى مدرس آخر',
+        });
+      }
+    }
+
     if (teacher) {
       const teacherValidation = await validateTeacher(teacher);
 
@@ -162,8 +184,6 @@ const updateCourse = async (req, res) => {
         });
       }
     }
-
-    const course = access.course;
 
     if (name) course.name = name.trim();
     if (typeof description === 'string') course.description = description.trim();
