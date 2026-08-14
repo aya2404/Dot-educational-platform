@@ -7,6 +7,7 @@ const Content = require('../models/Content');
 const Submission = require('../models/Submission');
 const { isSubmissionWindowOpen } = require('../utils/permissions');
 const { resolveCourseAccess } = require('../utils/courseAccess');
+const { notify } = require('../utils/notifications');
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 const enrollStudent = async (req, res) => {
@@ -71,6 +72,15 @@ const enrollStudent = async (req, res) => {
     const enrollment = await Enrollment.create({
       student: student._id,
       course: access.course._id,
+    });
+
+    // Notify the enrolled student (non-blocking — never fails the enrolment).
+    await notify(student._id, {
+      type: 'COURSE_ENROLLED',
+      title: 'تم تسجيلك في كورس جديد',
+      message: `تم تسجيلك في «${access.course.name}»`,
+      course: access.course._id,
+      link: `/student/course/${access.course._id}`,
     });
 
     return res.status(201).json({ success: true, data: enrollment });

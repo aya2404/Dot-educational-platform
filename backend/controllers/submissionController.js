@@ -7,6 +7,7 @@ const { normalizeAttachmentArray } = require('../utils/attachments');
 const { resolveCourseAccess } = require('../utils/courseAccess');
 const { getSubmissionPermissions, isSubmissionWindowOpen, userHasManagerPrivileges } = require('../utils/permissions');
 const { serializeSubmission } = require('../utils/serializers');
+const { notify } = require('../utils/notifications');
 
 const getSafeAnswer = (answer) => (typeof answer === 'string' ? answer.trim() : '');
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
@@ -214,6 +215,16 @@ const gradeSubmission = async (req, res) => {
 
     await submission.save();
     await submission.populate('student', 'name username studentId');
+
+    // Notify the student that their submission was graded (non-blocking — a
+    // notification failure never affects the grade that was just saved).
+    await notify(submission.student?._id || submission.student, {
+      type: 'SUBMISSION_GRADED',
+      title: 'تم تقييم تسليمك',
+      message: `«${task.title}»: ${grade} من ${maxScore}`,
+      course: task.course,
+      link: `/student/course/${task.course}`,
+    });
 
     return res.json({
       success: true,
