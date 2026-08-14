@@ -13,11 +13,11 @@ const {
 router.use(protect);
 
 
-router.post('/', authorize('superadmin'), enrollStudent);
+router.post('/', authorize('teacher', 'admin', 'superadmin'), enrollStudent);
 router.get('/my', authorize('student'), getMyEnrollments);
 router.get('/my-deadlines', authorize('student'), getMyDeadlines);
 router.post('/complete', authorize('student'), markLectureComplete);
 router.get('/progress/:courseId', authorize('student'), getStudentProgress);
-router.delete('/:id', authorize('superadmin'), unenrollStudent);
+router.delete('/:id', authorize('teacher', 'admin', 'superadmin'), unenrollStudent);
 
 module.exports = router;
