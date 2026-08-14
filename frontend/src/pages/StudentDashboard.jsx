@@ -9,6 +9,7 @@ import {
 } from 'react-icons/bs';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
+import UpcomingDeadlines from '../components/student/UpcomingDeadlines';
 import api from '../utils/api';
 
 const DAY_AR = {
@@ -82,6 +83,8 @@ const StudentDashboard = () => {
             </div>
           </article>
         </section>
+
+        <UpcomingDeadlines />
 
         <section className="surface-card">
           <div className="section-heading">

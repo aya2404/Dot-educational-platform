@@ -40,6 +40,14 @@ const submissionSchema = new mongoose.Schema
       enum:['submitted', 'graded'],
       default: 'submitted',
     },
+
+    // Server-derived only: true when the submission was saved after the task's
+    // authoritative deadline. Never accepted from the client. Legacy submissions
+    // without this field serialize as false.
+    isLate: {
+      type:    Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

@@ -143,15 +143,16 @@ const Timeline = ({
                 const canManagePublish = !isStudent && item.permissions?.canEdit;
                 const isDraft = item.isPublished === false; // undefined/true => published
                 const isTogglingPublish = togglingPublishId === item._id;
-                const canManageSubmission = submission
-                  ? submission.permissions?.canEdit
-                  : !isPastDeadline;
+                // Late submissions are accepted — a student can always submit or
+                // edit their own task; the server flags lateness authoritatively.
+                const canManageSubmission = true;
+                const isLateSubmission = submission?.isLate === true;
                 const submissionStatus = submission
-                  ? submission.permissions?.isPastDeadline
-                    ? 'تم إغلاق التسليم بعد انتهاء الموعد'
+                  ? isLateSubmission
+                    ? 'تم التسليم (متأخر)'
                     : 'تم حفظ التسليم'
                   : isPastDeadline
-                    ? 'انتهى موعد التسليم'
+                    ? 'انتهى الموعد — يمكنك التسليم متأخراً'
                     : '';
 
                 return (
@@ -277,6 +278,7 @@ const Timeline = ({
                         <span className="timeline-entry__grade-score">
                           الدرجة: {submission.grade}
                           {typeof item.maxScore === 'number' ? ` / ${item.maxScore}` : ''}
+                          {isLateSubmission ? <span className="timeline-entry__late-badge">متأخر</span> : null}
                         </span>
                         {submission.feedback ? (
                           <p className="timeline-entry__grade-feedback">
@@ -288,20 +290,20 @@ const Timeline = ({
 
                     {isStudent && item.type === 'task' ? (
                       <div className="timeline-entry__footer">
-                        <span className={`timeline-entry__status ${isPastDeadline ? 'is-muted' : ''}`}>
+                        <span className="timeline-entry__status">
                           {submissionStatus}
+                          {isLateSubmission ? <span className="timeline-entry__late-badge">متأخر</span> : null}
                         </span>
                         <button
                           type="button"
                           className={`btn ${submission ? 'btn-outline-primary' : 'btn-primary'}`}
                           onClick={() => setSelectedTask(item)}
-                          disabled={!canManageSubmission}
                         >
                           <BsSend size={16} />
-                          {!canManageSubmission
-                            ? 'أغلق التسليم'
-                            : submission
-                              ? 'تعديل التسليم'
+                          {submission
+                            ? 'تعديل التسليم'
+                            : isPastDeadline
+                              ? 'تسليم متأخر'
                               : 'تسليم المهمة'}
                         </button>
                       </div>
