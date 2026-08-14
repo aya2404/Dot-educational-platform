@@ -9,11 +9,14 @@ import {
 } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/common/AppLayout';
+import ConfirmModal from '../components/common/ConfirmModal';
 import api from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import { getCreateContentPath, getRoleCoursePath, ROLE_LABELS } from '../utils/auth';
 
 const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const canManageEnrollments = mode === 'superadmin';
   const availableTabs = canManageEnrollments
     ? [
@@ -39,6 +42,40 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
   const [enrollmentForm, setEnrollmentForm] = useState({ studentId: '', courseId: '' });
   const [enrollmentMessage, setEnrollmentMessage] = useState({ type: '', text: '' });
   const [enrolling, setEnrolling] = useState(false);
+  const [togglingUserId, setTogglingUserId] = useState('');
+  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+  const [pendingDeactivation, setPendingDeactivation] = useState(null);
+
+  const currentUserId = currentUser?._id || currentUser?.id;
+
+  const applyActiveState = async (targetUser, nextActive) => {
+    setTogglingUserId(targetUser._id);
+    setStatusMessage({ type: '', text: '' });
+    try {
+      const response = await api.put(`/users/${targetUser._id}`, { isActive: nextActive });
+      const updated = response.data.data;
+      setUsers((current) => current.map((item) => (item._id === updated._id ? updated : item)));
+      setStatusMessage({
+        type: 'success',
+        text: nextActive ? `تم تفعيل حساب ${updated.name}` : `تم تعطيل حساب ${updated.name}`,
+      });
+    } catch (requestError) {
+      setStatusMessage({
+        type: 'danger',
+        text: requestError.response?.data?.message || 'تعذر تحديث حالة الحساب',
+      });
+    } finally {
+      setTogglingUserId('');
+    }
+  };
+
+  const handleToggleActive = (targetUser) => {
+    if (targetUser.isActive) {
+      setPendingDeactivation(targetUser); // destructive -> confirm first
+    } else {
+      applyActiveState(targetUser, true); // activation -> direct
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -331,6 +368,10 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
                   </div>
                 </div>
 
+                {statusMessage.text ? (
+                  <div className={`alert alert-${statusMessage.type} mb-3`}>{statusMessage.text}</div>
+                ) : null}
+
                 <div className="table-responsive">
                   <table className="table align-middle mb-0">
                     <thead>
@@ -339,17 +380,40 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
                         <th>المعرف</th>
                         <th>الدور</th>
                         <th>الحالة</th>
+                        <th>الإجراء</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map((user) => (
-                        <tr key={user._id}>
-                          <td>{user.name}</td>
-                          <td>{user.studentId}</td>
-                          <td>{ROLE_LABELS[user.role] || user.role}</td>
-                          <td>{user.isActive ? 'فعال' : 'معطل'}</td>
-                        </tr>
-                      ))}
+                      {users.map((user) => {
+                        const isSelf = currentUserId && String(user._id) === String(currentUserId);
+                        const isPending = togglingUserId === user._id;
+                        return (
+                          <tr key={user._id}>
+                            <td>{user.name}</td>
+                            <td>{user.studentId}</td>
+                            <td>{ROLE_LABELS[user.role] || user.role}</td>
+                            <td>
+                              <span className={`badge ${user.isActive ? 'bg-success' : 'bg-secondary'}`}>
+                                {user.isActive ? 'فعال' : 'معطل'}
+                              </span>
+                            </td>
+                            <td>
+                              {isSelf ? (
+                                <span className="text-muted small">حسابك الحالي</span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className={`btn btn-sm ${user.isActive ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                                  onClick={() => handleToggleActive(user)}
+                                  disabled={isPending}
+                                >
+                                  {isPending ? '...' : user.isActive ? 'تعطيل' : 'تفعيل'}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -470,6 +534,27 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
           </section>
         ) : null}
       </div>
+
+      <ConfirmModal
+        open={Boolean(pendingDeactivation)}
+        title="تعطيل الحساب"
+        message={
+          pendingDeactivation
+            ? `سيتم تعطيل حساب "${pendingDeactivation.name}". لن يتمكن من تسجيل الدخول حتى إعادة التفعيل.`
+            : ''
+        }
+        confirmText="تعطيل"
+        cancelText="إلغاء"
+        loading={Boolean(pendingDeactivation) && togglingUserId === pendingDeactivation._id}
+        onCancel={() => {
+          if (!togglingUserId) setPendingDeactivation(null);
+        }}
+        onConfirm={async () => {
+          const target = pendingDeactivation;
+          await applyActiveState(target, false);
+          setPendingDeactivation(null);
+        }}
+      />
     </AppLayout>
   );
 };
