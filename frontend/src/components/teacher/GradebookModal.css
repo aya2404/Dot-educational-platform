@@ -1,0 +1,106 @@
+.gradebook__body {
+  padding: 4px 0 8px;
+}
+
+/* The table scrolls inside its own container so the page body never scrolls
+   horizontally, no matter how many task columns a course has. */
+.gradebook__scroll {
+  max-height: 62vh;
+  overflow: auto;
+  border: 1px solid rgba(32, 63, 154, 0.12);
+  border-radius: 14px;
+}
+
+.gradebook__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.gradebook__table th,
+.gradebook__table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid rgba(32, 63, 154, 0.08);
+}
+
+.gradebook__table thead th {
+  position: sticky;
+  top: 0;
+  background: #eef2ff;
+  color: var(--dj-primary, #203f9a);
+  font-weight: 700;
+  z-index: 1;
+}
+
+.gradebook__task-head {
+  display: block;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gradebook__task-max {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--dj-muted, #6b7280);
+}
+
+.gradebook__student {
+  text-align: start;
+  position: sticky;
+  inset-inline-start: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.gradebook__student-name {
+  display: block;
+  font-weight: 700;
+  color: var(--dj-primary, #203f9a);
+}
+
+.gradebook__student-id {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--dj-muted, #6b7280);
+}
+
+.gradebook__num {
+  font-variant-numeric: tabular-nums;
+}
+
+.gradebook__pct {
+  font-weight: 700;
+  color: var(--dj-primary, #203f9a);
+}
+
+.gb-cell {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+.gb-cell--graded {
+  font-weight: 600;
+  color: #1b7a45;
+}
+
+.gb-cell--invalid {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.gb-cell--ungraded {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #6b2fb3;
+  background: #f0e5ff;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.gb-cell--missing {
+  color: #9ca3af;
+}
