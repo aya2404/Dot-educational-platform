@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 
 const Content = require('../models/Content');
 const Submission = require('../models/Submission');
+const Enrollment = require('../models/Enrollment');
+const { notifyMany } = require('../utils/notifications');
 const { normalizeAttachmentArray } = require('../utils/attachments');
 const { resolveCourseAccess } = require('../utils/courseAccess');
 const { getContentPermissions } = require('../utils/permissions');
@@ -17,6 +19,35 @@ const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 const isStudentViewer = (user) => user?.role === 'student';
 const PUBLISHED_ONLY = { isPublished: { $ne: false } };
 const isDraftContent = (content) => content?.isPublished === false;
+
+// Notify a course's actively-enrolled students when a PUBLISHED task or
+// announcement becomes available. Non-blocking: any failure is swallowed so it
+// never affects content creation/update. Drafts and other types never notify.
+const notifyEnrolledOfContent = async (course, content) => {
+  try {
+    if (!['task', 'announcement'].includes(content.type)) return;
+    if (content.isPublished === false) return;
+
+    const enrollments = await Enrollment.find({
+      course: course._id,
+      isActive: true,
+    }).select('student');
+
+    const isTask = content.type === 'task';
+    await notifyMany(
+      enrollments.map((enrollment) => enrollment.student),
+      {
+        type: isTask ? 'NEW_TASK' : 'COURSE_ANNOUNCEMENT',
+        title: isTask ? 'مهمة جديدة' : 'إعلان جديد',
+        message: `${course.name}: ${content.title}`,
+        course: course._id,
+        link: `/student/course/${course._id}`,
+      }
+    );
+  } catch (error) {
+    console.error('notifyEnrolledOfContent error:', error.message);
+  }
+};
 
 const getCourseContent = async (req, res) => {
   try {
@@ -167,6 +198,9 @@ const createContent = async (req, res) => {
 
     await content.populate('createdBy', 'name role');
 
+    // Notify enrolled students of a newly published task/announcement.
+    await notifyEnrolledOfContent(access.course, content);
+
     return res.status(201).json({
       success: true,
       data: serializeContent(content, req, { course: access.course }),
@@ -208,6 +242,10 @@ const updateContent = async (req, res) => {
         message: 'غير مصرح لك بتعديل هذا المحتوى',
       });
     }
+
+    // Publication state before edits — used to notify students only on a genuine
+    // draft -> published transition (not on edits of already-published content).
+    const wasPublished = content.isPublished !== false;
 
     if (typeof req.body.attachments !== 'undefined' && !Array.isArray(req.body.attachments)) {
       return res.status(400).json({
@@ -267,6 +305,11 @@ const updateContent = async (req, res) => {
 
     await content.save();
     await content.populate('createdBy', 'name role');
+
+    // Draft -> published transition: notify enrolled students (once, on the flip).
+    if (!wasPublished && content.isPublished !== false) {
+      await notifyEnrolledOfContent(access.course, content);
+    }
 
     return res.json({
       success: true,

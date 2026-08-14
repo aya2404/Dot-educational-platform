@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { ROLE_LABELS } from '../../utils/auth';
 import BrandLogo from './BrandLogo';
+import NotificationBell from './NotificationBell';
 import './Sidebar.css';
 
 const NAV_LINKS = {
@@ -60,6 +61,10 @@ const Sidebar = ({ open, onClose }) => {
           <p className="sidebar-user-card__name">{user?.name}</p>
           <p className="sidebar-user-card__role">{ROLE_LABELS[user?.role]}</p>
         </div>
+      </div>
+
+      <div className="sidebar-notifications">
+        <NotificationBell onNavigate={onClose} />
       </div>
 
       <nav className="sidebar-nav">
