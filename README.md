@@ -48,6 +48,26 @@ The deployed application provides the complete platform experience across its su
 
 ---
 
+## 🔐 Demo Accounts
+
+You can explore the live application using the following fictional demo accounts.
+
+| Role | Username / ID | Password |
+|------|---------------|----------|
+| 👨‍🎓 Student | `demo_student` | `DemoPassword123!` |
+| 👩‍🏫 Teacher | `demo_teacher` | `DemoPassword123!` |
+| 🧑‍💼 Admin | `demo_admin` | `DemoPassword123!` |
+| 👑 Super Admin | `demo_superadmin` | `DemoPassword123!` |
+
+> These are fictional demo accounts created specifically for testing the application.
+> Do not use these credentials for any real account or production environment.
+
+### 🚀 Try the Live Demo
+
+**[Launch Dot Educational Platform](https://dot-educational-platform-1.onrender.com)**
+
+---
+
 ## 🏗️ Architecture
 
 Dot follows a layered client-server architecture:
