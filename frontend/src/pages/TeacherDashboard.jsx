@@ -4,6 +4,7 @@ import { BsArrowLeft, BsBookHalf, BsPeople, BsPersonDash, BsPersonPlus, BsPlusSq
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
 import ConfirmModal from '../components/common/ConfirmModal';
+import Loader from '../components/common/Loader';
 import api from '../utils/api';
 import { getCreateContentPath, getRoleCoursePath } from '../utils/auth';
 
@@ -256,11 +257,7 @@ const TeacherDashboard = () => {
           </article>
         </section>
 
-        {isLoading ? (
-          <div className="surface-card section-state">
-            <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-          </div>
-        ) : null}
+        {isLoading ? <Loader variant="section" card /> : null}
 
         {!isLoading && error ? <div className="alert alert-danger">{error}</div> : null}
 

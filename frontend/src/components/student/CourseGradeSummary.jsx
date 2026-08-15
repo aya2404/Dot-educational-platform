@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BsBarChartLineFill } from 'react-icons/bs';
 import api from '../../utils/api';
+import Loader from '../common/Loader';
 import './CourseGradeSummary.css';
 
 const formatPercentage = (value) =>
@@ -36,9 +37,7 @@ const CourseGradeSummary = ({ courseId }) => {
   if (isLoading) {
     return (
       <section className="surface-card grade-summary" aria-label="ملخص الدرجات">
-        <div className="section-state">
-          <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-        </div>
+        <Loader variant="section" />
       </section>
     );
   }

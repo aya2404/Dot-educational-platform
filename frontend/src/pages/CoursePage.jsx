@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
 import ConfirmModal from '../components/common/ConfirmModal';
+import Loader from '../components/common/Loader';
 import Timeline from '../components/student/Timeline';
 import CourseGradeSummary from '../components/student/CourseGradeSummary';
 import CourseFormModal from '../components/teacher/CourseFormModal';
@@ -178,11 +179,7 @@ const CoursePage = () => {
           <div className={`alert alert-${courseActionMsg.type} mb-0`}>{courseActionMsg.text}</div>
         ) : null}
 
-        {isLoading && (
-          <div className="surface-card section-state">
-            <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-          </div>
-        )}
+        {isLoading && <Loader variant="section" card />}
 
         {!isLoading && error && (
           <div className="surface-card">

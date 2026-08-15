@@ -9,6 +9,7 @@ import {
 } from 'react-icons/bs';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
+import Loader from '../components/common/Loader';
 import UpcomingDeadlines from '../components/student/UpcomingDeadlines';
 import api from '../utils/api';
 
@@ -93,11 +94,7 @@ const StudentDashboard = () => {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="section-state">
-              <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-            </div>
-          ) : null}
+          {isLoading ? <Loader variant="section" /> : null}
 
           {!isLoading && error ? <div className="alert alert-danger mb-0">{error}</div> : null}
 

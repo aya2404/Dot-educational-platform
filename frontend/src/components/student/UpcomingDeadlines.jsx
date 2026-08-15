@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BsCalendarWeek, BsClockHistory } from 'react-icons/bs';
 import api from '../../utils/api';
+import Loader from '../common/Loader';
 import { formatDueDate } from '../../utils/contentTypes';
 import './UpcomingDeadlines.css';
 
@@ -80,9 +81,7 @@ const UpcomingDeadlines = () => {
       </div>
 
       {isLoading ? (
-        <div className="section-state">
-          <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-        </div>
+        <Loader variant="section" />
       ) : error ? (
         <div className="alert alert-danger mb-0">{error}</div>
       ) : deadlines.length === 0 ? (

@@ -3,6 +3,7 @@ import { BsCheckCircle, BsClipboardCheck, BsXLg } from 'react-icons/bs';
 import api from '../../utils/api';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import AttachmentList from '../common/AttachmentList';
+import Loader from '../common/Loader';
 import { formatDueDate } from '../../utils/contentTypes';
 import './SubmissionsReviewModal.css';
 
@@ -211,9 +212,7 @@ const SubmissionsReviewModal = ({ task, onClose }) => {
 
         <div className="submission-review__body">
           {isLoading ? (
-            <div className="section-state">
-              <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-            </div>
+            <Loader variant="section" />
           ) : error ? (
             <div className="alert alert-danger mb-0">{error}</div>
           ) : submissions.length === 0 ? (

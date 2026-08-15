@@ -437,6 +437,12 @@ a {
   font-size: 0.85rem;
 }
 
+.app-loader {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
 .section-state {
   min-height: 160px;
   display: grid;

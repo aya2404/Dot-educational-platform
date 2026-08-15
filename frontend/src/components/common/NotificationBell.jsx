@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BsBell, BsBellFill, BsCheck2All } from 'react-icons/bs';
 import api from '../../utils/api';
+import Loader from './Loader';
 import { formatArabicDate } from '../../utils/contentTypes';
 import './NotificationBell.css';
 
@@ -111,7 +112,7 @@ const NotificationBell = ({ onNavigate }) => {
           <div className="notif-panel__body">
             {isLoading ? (
               <div className="notif-panel__state">
-                <div className="spinner-border text-primary spinner-border-sm" role="status" aria-hidden="true" />
+                <Loader variant="inline" />
               </div>
             ) : error ? (
               <div className="alert alert-danger mb-0">{error}</div>

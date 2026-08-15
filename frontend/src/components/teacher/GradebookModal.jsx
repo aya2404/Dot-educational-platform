@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BsTable, BsXLg } from 'react-icons/bs';
 import api from '../../utils/api';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import Loader from '../common/Loader';
 import './GradebookModal.css';
 
 const formatPercentage = (value) =>
@@ -96,9 +97,7 @@ const GradebookModal = ({ course, onClose }) => {
 
         <div className="gradebook__body">
           {isLoading ? (
-            <div className="section-state">
-              <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-            </div>
+            <Loader variant="section" />
           ) : error ? (
             <div className="alert alert-danger mb-0">{error}</div>
           ) : students.length === 0 ? (

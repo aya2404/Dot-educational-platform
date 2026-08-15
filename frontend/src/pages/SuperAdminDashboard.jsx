@@ -10,6 +10,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/common/AppLayout';
 import ConfirmModal from '../components/common/ConfirmModal';
+import Loader from '../components/common/Loader';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { getCreateContentPath, getRoleCoursePath, ROLE_LABELS } from '../utils/auth';
@@ -237,11 +238,7 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
           ))}
         </div>
 
-        {isLoading ? (
-          <div className="surface-card section-state">
-            <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-          </div>
-        ) : null}
+        {isLoading ? <Loader variant="section" card /> : null}
 
         {!isLoading && error ? <div className="alert alert-danger">{error}</div> : null}
 

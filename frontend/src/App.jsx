@@ -1,28 +1,28 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
-
+import Loader from './components/common/Loader';
 import LoginPage from './pages/LoginPage';
-import StudentDashboard from './pages/StudentDashboard';
-import TeacherDashboard from './pages/TeacherDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import SuperAdminDashboard from './pages/SuperAdminDashboard';
-import CoursePage from './pages/CoursePage';
-import CreateContentPage from './pages/CreateContentPage';
 import { getRoleHomePath } from './utils/auth';
 
 import './styles/global.css';
+
+// Authenticated routes are code-split so the initial (login) load ships a
+// smaller JS bundle; each dashboard/page and its heavy children (modals,
+// timeline, gradebook) are fetched on demand behind the Suspense boundary.
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
+const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
+const CoursePage = lazy(() => import('./pages/CoursePage'));
+const CreateContentPage = lazy(() => import('./pages/CreateContentPage'));
 
 const SessionRedirect = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="app-loader">
-        <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-      </div>
-    );
+    return <Loader variant="page" />;
   }
 
   return <Navigate to={user ? getRoleHomePath(user.role) : '/login'} replace />;
@@ -32,11 +32,7 @@ const GuestRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="app-loader">
-        <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-      </div>
-    );
+    return <Loader variant="page" />;
   }
 
   if (user) {
@@ -176,7 +172,9 @@ const AppRoutes = () => (
 const App = () => (
   <BrowserRouter>
     <AuthProvider>
-      <AppRoutes />
+      <Suspense fallback={<Loader variant="page" />}>
+        <AppRoutes />
+      </Suspense>
     </AuthProvider>
   </BrowserRouter>
 );

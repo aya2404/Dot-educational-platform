@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { BsArrowRight, BsLink45Deg, BsPencilSquare, BsPlus, BsSave } from 'react-icons/bs';
 import AppLayout from '../components/common/AppLayout';
 import FileUploader from '../components/common/FileUploader';
+import Loader from '../components/common/Loader';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -188,11 +189,7 @@ const CreateContentPage = () => {
           </div>
         </section>
 
-        {pageLoading ? (
-          <div className="surface-card section-state">
-            <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-          </div>
-        ) : null}
+        {pageLoading ? <Loader variant="section" card /> : null}
 
         {!pageLoading ? (
           <div className="row g-4">

@@ -2,16 +2,13 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getRoleHomePath } from '../../utils/auth';
+import Loader from './Loader';
 
 const ProtectedRoute = ({ children, roles = [] }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="app-loader">
-        <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-      </div>
-    );
+    return <Loader variant="page" />;
   }
 
   if (!user) {

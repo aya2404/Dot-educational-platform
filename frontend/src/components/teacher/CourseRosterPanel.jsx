@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { BsPersonDash, BsPersonPlus } from 'react-icons/bs';
 import api from '../../utils/api';
 import ConfirmModal from '../common/ConfirmModal';
+import Loader from '../common/Loader';
 
 // Reusable single-course roster management for course managers
 // (teacher / admin / superadmin). Uses the existing backend contract:
@@ -109,9 +110,7 @@ const CourseRosterPanel = ({ courseId }) => {
       ) : null}
 
       {loading ? (
-        <div className="section-state">
-          <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-        </div>
+        <Loader variant="section" />
       ) : loadError ? (
         <div className="alert alert-danger mb-0">{loadError}</div>
       ) : students.length === 0 ? (
