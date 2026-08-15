@@ -42,10 +42,16 @@ const toPublicUrl = (url, req) => {
     return '';
   }
 
-  if (ABSOLUTE_URL_PATTERN.test(cleanUrl) || cleanUrl.startsWith('data:')) {
-    return cleanUrl;
+  // If the URL carries a scheme, only http/https are safe. Anything else
+  // (javascript:, data:, vbscript:, file:, blob:, …) is rejected so an unsafe
+  // scheme can never be stored or navigated to.
+  const schemeMatch = cleanUrl.match(/^([a-z][a-z0-9+.-]*):/i);
+  if (schemeMatch) {
+    const scheme = schemeMatch[1].toLowerCase();
+    return scheme === 'http' || scheme === 'https' ? cleanUrl : '';
   }
 
+  // No scheme -> a relative path (e.g. /uploads/...); resolve against the API base.
   const baseUrl = getRequestBaseUrl(req);
 
   if (!baseUrl) {

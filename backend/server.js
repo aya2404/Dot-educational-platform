@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 
 const connectDB = require('./config/db');
+const { buildAllowedOrigins, isOriginAllowed } = require('./utils/cors');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const courseRoutes = require('./routes/courses');
@@ -17,15 +18,25 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
-const allowedOrigins = (process.env.CLIENT_ORIGIN || '')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = buildAllowedOrigins(process.env.CLIENT_ORIGIN);
+
+// Minimal, dependency-free security-header baseline (helmet is not a dependency).
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  if (isProduction) {
+    res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+  }
+  next();
+});
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin, allowedOrigins, isProduction)) {
         return callback(null, true);
       }
 
@@ -34,7 +45,7 @@ app.use(
   })
 );
 app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -49,6 +60,12 @@ app.use(
   express.static(path.join(__dirname, 'uploads'), {
     index: false,
     maxAge: '1d',
+    setHeaders(res) {
+      // Never render user uploads inline (defence-in-depth against stored HTML/SVG):
+      // force download and prevent content-type sniffing.
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Disposition', 'attachment');
+    },
   })
 );
 
