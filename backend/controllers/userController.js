@@ -31,7 +31,10 @@ const generateUsername = async (role) => {
 
 const getAllUsers = async (req, res) => {
   try {
-    const { role } = req.query;
+    // Coerce the role filter to a plain string so a query like `?role[$ne]=...`
+    // (which Express parses into an object) can never reach Mongo as a live
+    // operator. Only a non-empty string acts as a filter; anything else lists all.
+    const role = typeof req.query.role === 'string' ? req.query.role.trim() : '';
     const query = role ? { role } : {};
     const users = await User.find(query)
       .select('-password')

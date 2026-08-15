@@ -44,6 +44,30 @@ const allowedExtensions = new Set([
   '.rar',
 ]);
 
+// Browser-renderable / executable types that must never be accepted, even if a
+// spoofed MIME type would otherwise pass — they can execute script when opened.
+const blockedExtensions = new Set([
+  '.html', '.htm', '.xhtml', '.shtml', '.svg', '.svgz', '.xml', '.js', '.mjs', '.htaccess',
+]);
+const blockedMimeTypes = new Set([
+  'text/html', 'application/xhtml+xml', 'image/svg+xml', 'application/xml', 'text/xml',
+  'text/javascript', 'application/javascript', 'application/x-javascript',
+]);
+
+// Testable decision: trust neither MIME nor extension alone. Reject dangerous
+// MIME types AND dangerous extensions, then require a known-safe extension (the
+// extension is what the file is stored/served with, so it is authoritative).
+const isUploadAllowed = ({ originalname, mimetype } = {}) => {
+  const extension = path.extname(originalname || '').toLowerCase();
+  const mime = (mimetype || '').toLowerCase();
+
+  if (blockedExtensions.has(extension) || blockedMimeTypes.has(mime)) {
+    return false;
+  }
+
+  return allowedExtensions.has(extension);
+};
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -51,12 +75,9 @@ const upload = multer({
     files: 5,
   },
   fileFilter(req, file, callback) {
-    const extension = path.extname(file.originalname || '').toLowerCase();
-
-    if (allowedMimeTypes.has(file.mimetype) || allowedExtensions.has(extension)) {
+    if (isUploadAllowed(file)) {
       return callback(null, true);
     }
-
     return callback(new Error('نوع الملف غير مدعوم'));
   },
 });
@@ -64,4 +85,5 @@ const upload = multer({
 module.exports = {
   MAX_FILE_SIZE,
   upload,
+  isUploadAllowed,
 };

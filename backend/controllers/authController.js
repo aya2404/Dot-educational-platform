@@ -40,27 +40,24 @@ const login = async (req, res) => {
 
     const user = await User.findOne(getUserQuery(identifier)).select('+password');
 
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'بيانات الدخول غير صحيحة',
-      });
-    }
+    // Uniform failure for unknown user, wrong password, AND inactive account —
+    // and the password comparison always runs before the account-state check so
+    // neither the message nor timing reveals whether the account exists/is active.
+    const invalidCredentials = () =>
+      res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
 
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'الحساب معطل - الرجاء التواصل مع الدعم الفني',
-      });
+    if (!user) {
+      return invalidCredentials();
     }
 
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'بيانات الدخول غير صحيحة',
-      });
+      return invalidCredentials();
+    }
+
+    if (!user.isActive) {
+      return invalidCredentials();
     }
 
     return res.json({
