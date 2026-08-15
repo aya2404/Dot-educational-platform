@@ -4,17 +4,22 @@ import {
   BsArrowRight,
   BsCheck2Circle,
   BsClockHistory,
+  BsPencilSquare,
   BsPerson,
   BsPlusSquare,
   BsTable,
+  BsTrash3,
 } from 'react-icons/bs';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
+import ConfirmModal from '../components/common/ConfirmModal';
 import Timeline from '../components/student/Timeline';
 import CourseGradeSummary from '../components/student/CourseGradeSummary';
+import CourseFormModal from '../components/teacher/CourseFormModal';
+import CourseRosterPanel from '../components/teacher/CourseRosterPanel';
 import GradebookModal from '../components/teacher/GradebookModal';
 import api from '../utils/api';
-import { getCreateContentPath, getEditContentPath } from '../utils/auth';
+import { getCreateContentPath, getEditContentPath, getRoleHomePath } from '../utils/auth';
 
 const CoursePage = () => {
   const { courseId } = useParams();
@@ -26,6 +31,10 @@ const CoursePage = () => {
   const [completedLectures, setCompletedLectures] = useState([]);
   const [submissions, setSubmissions] = useState({});
   const [showGradebook, setShowGradebook] = useState(false);
+  const [showEditCourse, setShowEditCourse] = useState(false);
+  const [pendingCourseDelete, setPendingCourseDelete] = useState(false);
+  const [deletingCourse, setDeletingCourse] = useState(false);
+  const [courseActionMsg, setCourseActionMsg] = useState({ type: '', text: '' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -97,6 +106,25 @@ const CoursePage = () => {
     setContent((current) => current.map((entry) => (entry._id === updated._id ? updated : entry)));
   };
 
+  const handleCourseSaved = (updatedCourse) => {
+    setCourse(updatedCourse); // reflect edits immediately in the header
+    setShowEditCourse(false);
+    setCourseActionMsg({ type: 'success', text: 'تم تحديث بيانات الكورس' });
+  };
+
+  const handleDeleteCourse = async () => {
+    setDeletingCourse(true);
+    setCourseActionMsg({ type: '', text: '' });
+    try {
+      await api.delete(`/courses/${courseId}`);
+      navigate(getRoleHomePath(user?.role), { replace: true }); // list refreshes on mount
+    } catch (requestError) {
+      setCourseActionMsg({ type: 'danger', text: requestError.response?.data?.message || 'تعذر حذف الكورس' });
+      setDeletingCourse(false);
+      setPendingCourseDelete(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="app-page" style={{ gap: '16px' }}>
@@ -118,6 +146,24 @@ const CoursePage = () => {
               </button>
               <button
                 type="button"
+                className="btn btn-outline-primary"
+                onClick={() => setShowEditCourse(true)}
+                disabled={!course}
+              >
+                <BsPencilSquare size={16} />
+                تعديل الكورس
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                onClick={() => setPendingCourseDelete(true)}
+                disabled={!course || deletingCourse}
+              >
+                <BsTrash3 size={16} />
+                حذف الكورس
+              </button>
+              <button
+                type="button"
                 className="btn btn-primary"
                 onClick={() => navigate(`${getCreateContentPath(user?.role)}?courseId=${courseId}`)}
               >
@@ -127,6 +173,10 @@ const CoursePage = () => {
             </>
           )}
         </div>
+
+        {courseActionMsg.text ? (
+          <div className={`alert alert-${courseActionMsg.type} mb-0`}>{courseActionMsg.text}</div>
+        ) : null}
 
         {isLoading && (
           <div className="surface-card section-state">
@@ -180,6 +230,8 @@ const CoursePage = () => {
 
             {isStudent && <CourseGradeSummary courseId={courseId} />}
 
+            {canManageContent && <CourseRosterPanel courseId={courseId} />}
+
             <Timeline
               content={content}
               currentUser={user}
@@ -199,6 +251,28 @@ const CoursePage = () => {
       {showGradebook && course && (
         <GradebookModal course={course} onClose={() => setShowGradebook(false)} />
       )}
+
+      <CourseFormModal
+        open={showEditCourse && Boolean(course)}
+        course={course}
+        onClose={() => setShowEditCourse(false)}
+        onSaved={handleCourseSaved}
+      />
+
+      <ConfirmModal
+        open={pendingCourseDelete}
+        title="حذف الكورس"
+        message={
+          course
+            ? `سيتم حذف «${course.name}» وجميع محتوياته وتسجيلات الطلاب والتسليمات المرتبطة به. لا يمكن التراجع عن هذا الإجراء.`
+            : ''
+        }
+        confirmText="حذف الكورس"
+        cancelText="إلغاء"
+        loading={deletingCourse}
+        onCancel={() => !deletingCourse && setPendingCourseDelete(false)}
+        onConfirm={handleDeleteCourse}
+      />
     </AppLayout>
   );
 };
