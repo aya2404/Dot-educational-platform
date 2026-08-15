@@ -1,266 +1,168 @@
-<div align="center">
+# Dot Educational Platform
 
-# 🎓 Dot Jordan
-
-### An Arabic-first Learning Management System that connects students, teachers, and administrators through one role-aware learning ecosystem.
-
-Built with the **MERN** stack · JWT-secured · role-based · responsive · bilingual (Arabic / English)
-
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev)
-[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com)
-[![JWT](https://img.shields.io/badge/Auth-JWT%20%2B%20bcrypt-000000?logo=jsonwebtokens&logoColor=white)](https://jwt.io)
-[![Bootstrap](https://img.shields.io/badge/UI-Bootstrap%205-7952B3?logo=bootstrap&logoColor=white)](https://getbootstrap.com)
-[![Render](https://img.shields.io/badge/Deployed-Render-46E3B7?logo=render&logoColor=white)](https://render.com)
-
-**[🌐 Live Demo](https://dot-vqx9.onrender.com/)** · **[💻 Repository](https://github.com/aya2404/Dot-educational-platform)** · **[🎥 LinkedIn Demo Video](#)**
-
-<sub>The live demo runs on a free Render tier — the first request may take ~30s to wake the server.</sub>
-
-</div>
+**Dot** is a role-aware, Arabic-first (RTL) learning management platform for small education programs. It replaces scattered chat groups and spreadsheets with a single application where teachers run courses — publishing lessons, videos, materials, and assignments — and students enroll, learn, submit work, and track their grades and deadlines, all tied together with in-app notifications.
 
 ---
 
-## 🧭 Contents
+## Overview
 
-[What is Dot Jordan?](#-what-is-dot-jordan) · [Role-Based Experience](#-role-based-experience) · [Core Features](#-core-features) · [Security & Engineering](#-security--engineering) · [Testing & Quality](#-testing--quality) · [UI / UX](#-ui--ux) · [Architecture](#-architecture) · [Tech Stack](#-tech-stack) · [Project Structure](#-project-structure) · [Demo](#-demo) · [Screenshots](#-screenshots) · [Local Development](#-local-development) · [Deployment](#-deployment) · [Documentation](#-documentation) · [Roadmap](#-roadmap) · [Author](#-author--project)
+Small learning programs juggle course timelines, lecture materials, assignments, and a mix of students, teachers, and administrators — usually across disconnected tools. Dot brings these into one coherent, permission-aware system.
 
----
+- **Problem:** fragmented course delivery, enrollment tracking, submission handling, and grading.
+- **Purpose:** a single platform where each role sees exactly what it needs and can do only what it is authorized to do.
+- **User roles:** Student, Teacher, Admin, Super Admin.
+- **Major workflows:** authentication → course access/management → content publishing → assignment submission → grading → gradebook → deadlines → notifications.
 
-## 🌟 What is Dot Jordan?
-
-Learning programs juggle course timelines, lecture materials, assignments, and a mix of students, teachers, and admins — usually across scattered chat groups and spreadsheets. **Dot Jordan** replaces that with a single role-aware platform.
-
-Every account belongs to one of **four roles** — *Student, Teacher, Admin, Super Admin* — and the interface, data, and permissions adapt to that role. A student sees a clean course timeline and submits assignments; a teacher publishes content and reviews submissions; administrators manage people and courses. The UI is **Arabic-first (RTL)** and bilingual, designed for an Arabic full-stack bootcamp.
-
-It’s a real, working full-stack application: JWT authentication, ownership-based authorization, file uploads, a dated content timeline, and an assignment/submission workflow — not a static prototype.
+The interface is Arabic (right-to-left) with mixed Arabic/English technical terminology.
 
 ---
 
-## 👥 Role-Based Experience
+## Key Features
 
-Each role logs into its own dashboard with data and actions scoped to what it’s allowed to do.
+### Student
+- Secure login with username or student ID
+- Dashboard with enrolled courses and progress
+- Course content timeline (lectures, videos, materials, external resources, announcements, tasks)
+- Mark lectures complete
+- Submit, edit, and delete assignment submissions (with text and/or file attachments)
+- View grades and teacher feedback
+- Upcoming-deadlines feed with overdue indicators
+- In-app notifications (new task, announcement, graded submission, enrollment)
 
-### 🎓 Student
-- View **enrolled courses** and a **date-grouped timeline** of lectures, videos, materials, external resources, tasks, and announcements
-- **Mark lectures complete** and track progress
-- **Submit assignments** (text and/or file attachments), edit or delete a submission **until the deadline**
-- Access is limited to courses the student is actually enrolled in
+### Teacher
+- Dashboard listing owned courses
+- Create, edit, and delete courses
+- Manage the student roster: enroll (by student ID or username) and unenroll
+- Create content of every type and publish/unpublish (draft) it
+- Review and grade student submissions (late submissions accepted and flagged server-side)
+- Course gradebook across all students and tasks
+- In-app notifications
 
-### 👨‍🏫 Teacher
-- Manage a course they are assigned to: **create, edit, and delete** lectures, videos, materials, external resources, tasks, and announcements
-- View the **student roster** for their course
-- Review **task submissions** for their tasks
-- Cannot manage users or other teachers’ courses (ownership-enforced)
+### Admin / Super Admin
+- Administrative dashboard with users, courses, and (Super Admin) enrollments tabs
+- Create user accounts and activate/deactivate accounts
+- Manage any course's content and roster (create/edit/delete course, enroll/unenroll)
+- Super Admin: enrollment management surface; safeguards such as "at least one active super admin must remain" and no self-deactivation
 
-### 🛡️ Admin
-- **User management** — create students and teachers, activate/deactivate, edit accounts
-- **Content management** across courses
-- Course and platform **oversight** dashboards
+> Admins and Super Admins reach the same course-management page as teachers; role boundaries are enforced by the backend, not by the UI alone.
 
-### 👑 Super Admin
-- Everything an admin can do, **plus**: create / update / delete **courses**, manage **enrolments**, delete users, and manage **admin** accounts
-- The highest-privilege, full-administration view
+### Security (verified controls)
+- JWT authentication with bcrypt-hashed passwords (`select: false`)
+- Role-based authorization on every protected route
+- Object-level ownership checks (course, enrollment, submission, notification) — IDOR-resistant
+- Notification ownership isolation (a user can only read/modify their own)
+- Upload validation: allow-listed extensions, blocked executable/renderable types, MIME + extension checks; uploads served with `X-Content-Type-Options: nosniff` and `Content-Disposition: attachment`
+- Attachment URL scheme validation (only `http`/`https` and local upload paths survive; `javascript:`, `data:`, etc. are stripped)
+- CORS deny-by-default in production (no silent allow-all)
+- Baseline security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `X-DNS-Prefetch-Control`; HSTS in production)
+- Uniform login failures (no account-existence enumeration) and login/upload rate limiting
+- Input validation and NoSQL operator-injection guards; fail-fast if `JWT_SECRET` is missing
 
----
-
-## ✨ Core Features
-
-**🔑 Authentication & Security** — JWT login by username or ID, bcrypt-hashed passwords, role-based access control, protected frontend & backend routes, login rate limiting.
-
-**📚 Learning Management** — Courses with schedule (group, time, days), a dated content timeline, and per-student lecture-completion tracking.
-
-**📝 Assignments & Submissions** — Task content with due dates and max scores; one submission per student per task; editable until the deadline; server-enforced submission window.
-
-**🗂️ Content Management** — Six content types (lecture, video, material, external link, task, announcement) — videos embed a safe player (YouTube / Vimeo only), external links open in a new tab with `rel="noopener noreferrer"` — all with ownership-checked create/edit/delete.
-
-**🛠️ Administration** — User CRUD, course CRUD, and enrolment management gated by role.
-
-**📎 File Management** — Uploads via **Multer** to local disk, or **Cloudinary** when configured (auto-selected by environment); file-type/size validation; rate-limited upload endpoint; external-link attachments.
-
-**🌍 Internationalization** — Arabic-first RTL layout, bilingual (Arabic / English) content.
-
-**📱 Responsive UI** — Mobile-first layout with an off-canvas drawer sidebar; verified free of horizontal overflow from 320px to 1920px.
-
-**♿ Accessibility** — Associated form labels, accessible modals (dialog role, Escape-to-close, focus trap), image alt text, and keyboard navigation.
+This project applies a defined set of hardening measures; it does not claim to be free of all vulnerabilities. See **[Security](#security)** and **[Known Limitations](#known-limitations--future-improvements)**.
 
 ---
 
-## 🔐 Security & Engineering
+## Tech Stack
 
-Security features **confirmed in the codebase**:
+**Frontend**
+- React 18 (Create React App / `react-scripts`)
+- React Router 6
+- Bootstrap 5, React Icons
+- Axios
 
-| Area | Implementation |
-|------|----------------|
-| Authentication | Stateless **JWT** (`jsonwebtoken`), 7-day expiry, `Authorization: Bearer` header |
-| Password storage | **bcrypt** hashing via a Mongoose pre-save hook; `password` field is `select: false` (never returned by default queries) |
-| Authorization | **Role-based** middleware (`protect` + `authorize`) on every protected route |
-| Ownership checks | Teachers manage only their own courses/content; students edit only their own submissions, and only before the deadline |
-| Brute-force defense | **Login rate limiting** (`express-rate-limit`) on `/api/auth/login` |
-| Fail-fast config | Server refuses to start if `JWT_SECRET` is missing |
-| Secure updates | Password changes re-hash through the model; old password is invalidated |
-| Secrets | Environment-based (`.env`, git-ignored); Render secrets marked `sync: false` |
-| Verification | Automated backend tests cover `select:false`, the user-update path, the `JWT_SECRET` guard, and the login rate limiter |
+**Backend**
+- Node.js, Express 4
+- Mongoose 7 (MongoDB ODM)
+- Multer (file uploads), optional Cloudinary storage
+- `express-rate-limit`, `cors`, `dotenv`
 
-> Scope note: this is a portfolio/bootcamp project. It implements solid fundamentals but is not a hardened production security audit.
+**Database**
+- MongoDB
+
+**Authentication**
+- JSON Web Tokens (`jsonwebtoken`) + `bcryptjs`
+
+**Testing**
+- Node.js built-in test runner (`node --test`)
+
+**Build / Deployment**
+- CRA production build for the SPA
+- Render (`render.yaml`): a Node web service for the API and a static site for the frontend
 
 ---
 
-## 🧪 Testing & Quality
+## Architecture
 
-**Backend — automated tests (`node:test`):**
+```
+React SPA (Bootstrap, RTL)
+        │  Axios (REST, Bearer JWT)
+        ▼
+Express REST API  ──►  Auth middleware (JWT verify, active-account check)
+        │             Role authorization + object-ownership checks
+        ▼
+Controllers ──► Utilities (permissions, course access, attachments, gradebook, notifications)
+        ▼
+Mongoose models ──► MongoDB
+```
+
+- Stateless JWT auth; the token carries the user id and role.
+- Authorization is layered: route-level role gates plus controller-level ownership resolution (`resolveCourseAccess`, permission helpers).
+- File uploads are validated, then stored locally (`/uploads`, served with hardened headers) or on Cloudinary when configured.
+
+---
+
+## User Roles & Permissions
+
+| Role | Main Capabilities |
+|------|-------------------|
+| **Student** | Access enrolled courses, view published content, mark lectures complete, submit/edit/delete own submissions, view own grades and deadlines, receive notifications |
+| **Teacher** | Full management of owned courses: create/edit/delete course, manage roster (enroll/unenroll), create/edit/publish/delete content, review and grade submissions, view course gradebook |
+| **Admin** | Create users and activate/deactivate accounts; manage courses, content, and rosters |
+| **Super Admin** | All admin capabilities plus enrollment management; system safeguards (retain one active super admin, no self-deactivation) |
+
+Students never see or reach management controls; the backend rejects unauthorized actions regardless of the UI.
+
+---
+
+## Testing & Quality
+
+Verified in this repository:
+
+- **Backend automated tests:** 149 passing (`node --test`), run twice with zero failures. Coverage includes authentication/activation, security hardening (F1–F8), security headers, course management, notifications, gradebook, deadlines, submissions (including late-submission handling), publishing, grading, and permissions.
+- **Frontend production build:** `CI=true npm run build` compiles successfully with no warnings (ESLint clean).
+- **Browser E2E verification:** login/logout, course management (create/edit/delete + roster enroll/unenroll), content publishing, student submission (submit/edit/delete), grading, notifications, and responsive layouts were exercised in a real browser across student, teacher, admin, and super-admin roles with no console errors.
+- **Dependency audit:** backend reports 0 vulnerabilities; frontend advisories are almost entirely build-toolchain transitive dependencies (see Known Limitations).
+
+Run the backend suite:
 
 ```bash
 cd backend && npm test
 ```
 
-```
-tests 5 · pass 5 · fail 0 · skipped 0
-```
+---
 
-They cover: password `select: false` (hidden by default, retrievable with `+password`), updating a user without breaking required-field validation, the server failing fast when `JWT_SECRET` is missing, and the login rate limiter returning `429` after the threshold.
+## Security
 
-**Frontend — production build verified:**
+Implemented and verified security controls:
 
-```bash
-cd frontend && CI=true npm run build     # → Compiled successfully, 0 lint warnings
-```
+- JWT auth with bcrypt password hashing; passwords excluded from queries by default
+- Role-based authorization and object-level ownership checks (IDOR-resistant)
+- Notification ownership isolation
+- Upload restrictions (extension allow-list + blocked executable/renderable types + MIME checks) and hardened static serving (`nosniff`, `attachment`)
+- Attachment URL scheme validation (unsafe schemes stripped)
+- Production CORS deny-by-default; baseline security headers; HSTS in production
+- Login-enumeration resistance and rate limiting
+- NoSQL operator-injection guards, input validation, and fail-fast on missing `JWT_SECRET`
 
-> The frontend has no automated test suite yet; quality is verified via the linted production build plus the documented UI/UX and responsive audits.
+**Limitations / honesty note:** The frontend dependency audit still reports known advisories (mostly Create React App build-toolchain transitives, plus a React Router advisory that is not exploitable in this client-only, non-SSR SPA). These are documented under Known Limitations and are **not** claimed as resolved. This project is hardened against a defined set of findings, not certified vulnerability-free.
 
 ---
 
-## 🎨 UI / UX
-
-- **Responsive** across mobile, tablet, and desktop — sidebar collapses to a hamburger drawer below 992px; wide tables scroll inside their card instead of breaking the page
-- **Accessibility improvements** — form controls tied to labels, modals with `role="dialog"` + `aria-modal`, **Escape-to-close** and **focus trapping**, a single `<h1>` per page
-- **Keyboard interaction** — Tab/Shift+Tab cycle within open dialogs and focus returns to the trigger on close
-- **Bilingual, Arabic-first** interface with a cohesive design system (custom CSS variables + Bootstrap 5)
-
----
-
-## 🏗️ Architecture
-
-```
-        Browser (React SPA, React Router)
-                     │  Axios + JWT (Bearer)
-                     ▼
-        REST API  /api/*        ── CORS allow-list, JSON body limit
-                     │
-                     ▼
-        Express / Node.js
-          ├─ Auth middleware      → JWT verify + active-user check
-          ├─ RBAC middleware      → role authorization
-          ├─ Controllers          → business logic + ownership checks
-          └─ Multer / Cloudinary  → file uploads (local or cloud)
-                     │  Mongoose ODM
-                     ▼
-        MongoDB  (Users · Courses · Content · Enrollments · Submissions)
-```
-
-**Cross-cutting:** JWT authentication · role-based access control · ownership authorization · rate limiting · environment-based secrets.
-
----
-
-## 🧱 Tech Stack
-
-| Layer | Technologies |
-|-------|--------------|
-| **Frontend** | React 18, React Router 6, Bootstrap 5, Axios, react-icons (Create React App) |
-| **Backend** | Node.js, Express 4 |
-| **Database** | MongoDB, Mongoose 7 |
-| **Authentication** | JSON Web Tokens (`jsonwebtoken`), `bcryptjs`, `express-rate-limit` |
-| **File Management** | Multer, Cloudinary |
-| **Testing** | Node’s built-in test runner (`node:test`) |
-| **Deployment** | Render (static site + Node web service) |
-
----
-
-## 📁 Project Structure
-
-```
-Dot-educational-platform/
-├── backend/
-│   ├── config/            # db, cloudinary, uploads
-│   ├── controllers/       # auth, users, courses, content, submissions, enrollments, uploads
-│   ├── middleware/        # auth (protect/authorize), errorHandler, upload
-│   ├── models/            # User, Course, Content, Enrollment, Submission
-│   ├── routes/            # /api/* route definitions
-│   ├── utils/             # permissions, courseAccess, serializers, attachments
-│   ├── tests/             # node:test suite (model + integration)
-│   ├── seed.js            # demo/data seeder (idempotent demo accounts)
-│   └── server.js          # Express app entry point
-│
-├── frontend/
-│   └── src/
-│       ├── pages/         # Login, Student/Teacher/Admin/SuperAdmin dashboards, Course, CreateContent
-│       ├── components/    # layout, sidebar, modals, uploader, timeline
-│       ├── context/       # AuthContext (session + JWT)
-│       ├── hooks/         # useFocusTrap (modal accessibility)
-│       ├── utils/         # api client, auth helpers, attachments, content types
-│       └── styles/        # global design system
-│
-├── render.yaml            # Render deployment (frontend static + backend web service)
-└── docs (*.md)            # audit, setup, and test-result documentation
-```
-
----
-
-## 🎬 Demo
-
-The seed creates **exactly one fictional demo account per role**, wired to realistic demo courses so every role logs into a meaningful, non-empty dashboard. There is no email field — **log in with the username _or_ the student ID** (both work).
-
-| Role | Name | Username | Student ID |
-|------|------|----------|------------|
-| 🎓 Student | Lina Salem | `demo.student` | `STU-9001` |
-| 👨‍🏫 Teacher | Omar Naji | `demo.teacher` | `TCH-9001` |
-| 🛡️ Admin | Sara Haddad | `demo.admin` | `ADM-9001` |
-| 👑 Super Admin | Kareem Faris | `demo.superadmin` | `SAD-9001` |
-
-> ⚠️ **These are fictional demo accounts created only for showcasing the platform — do not use them in production.**
-> 🔑 **Passwords are documented in [LOCAL_SETUP.md → Demo Accounts](./LOCAL_SETUP.md#-demo-accounts)** (kept out of source code and this README on purpose).
-
-**What each role shows in the demo**
-
-- 🎓 **Student** — four enrolled courses, a dated content timeline (lectures, embedded videos, materials, external resources, announcements, tasks), and the **assignment submission** flow
-- 👨‍🏫 **Teacher** — owns two demo courses, sees the student roster, and manages content
-- 🛡️ **Admin** — user and content administration across the platform
-- 👑 **Super Admin** — full administration: users, courses, and enrolments
-
-The dataset is fully fictional and university-styled: **10 courses** across computer-science disciplines,
-**9 teachers**, and **50 students** with varied enrolments — enough to populate rosters and the admin
-dashboards realistically. Videos embed real public educational content; external resources link to
-reputable documentation (MDN, React, Node, MongoDB, PostgreSQL, Python, OWASP, AWS, GitHub).
-
-**🎥 [Watch the LinkedIn Demo Video](#)** *(link coming soon)*
-
----
-
-## 🖼️ Screenshots
-
-> Placeholders — add images under `docs/screenshots/` and update the links below.
-
-| | |
-|---|---|
-| **Login** | **Student Dashboard** |
-| _`docs/screenshots/login.png`_ | _`docs/screenshots/student-dashboard.png`_ |
-| **Course / Timeline** | **Task Submission** |
-| _`docs/screenshots/course-timeline.png`_ | _`docs/screenshots/task-submission.png`_ |
-| **Teacher Dashboard** | **Admin / Super Admin Dashboard** |
-| _`docs/screenshots/teacher-dashboard.png`_ | _`docs/screenshots/admin-dashboard.png`_ |
-
-<!--
-Example once images exist:
-![Student Dashboard](docs/screenshots/student-dashboard.png)
--->
-
----
-
-## 🚀 Local Development
+## Getting Started
 
 ### Prerequisites
-- **Node.js** 18+ and npm
-- **MongoDB** (local `mongod`, a Docker container, or a MongoDB Atlas connection string)
+- Node.js 18+ and npm
+- MongoDB (local `mongod`, Docker, or a MongoDB Atlas connection string)
 
 ### 1. Clone
 ```bash
@@ -268,143 +170,137 @@ git clone https://github.com/aya2404/Dot-educational-platform.git
 cd Dot-educational-platform
 ```
 
-### 2. Backend
+### 2. Install dependencies
 ```bash
-cd backend
-npm install
+cd backend && npm install
+cd ../frontend && npm install
 ```
-Create `backend/.env` (git-ignored — never commit it):
+
+### 3. Configure environment
+Create `backend/.env` (see `backend/.env.example`) and `frontend/.env`:
+
 ```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/dot-jordan
-JWT_SECRET=replace_with_a_long_random_secret
-JWT_EXPIRES_IN=7d
-CLIENT_ORIGIN=http://localhost:3000
-PUBLIC_API_URL=http://localhost:5000
-# Optional Cloudinary (falls back to local disk uploads if unset)
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+# frontend/.env
+REACT_APP_API_URL=http://localhost:5000/api
 ```
 
-**Environment variables**
+### 4. Database
+Ensure MongoDB is running and reachable at your `MONGO_URI` (default `mongodb://localhost:27017/dot-jordan`).
 
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `PORT` | – | Backend port (default `5000`) |
-| `MONGO_URI` | ✅ | MongoDB connection string |
-| `JWT_SECRET` | ✅ | Signing secret for JWTs (server refuses to start without it) |
-| `JWT_EXPIRES_IN` | – | Token lifetime (default `7d`) |
-| `CLIENT_ORIGIN` | – | Allowed CORS origin(s) |
-| `PUBLIC_API_URL` | – | Base URL used to build public file links |
-| `CLOUDINARY_*` | – | Cloud file storage; falls back to local disk uploads if unset |
-| `DEMO_*_PASSWORD` | seed only | Fictional demo-account passwords used by `npm run seed` — values documented in [LOCAL_SETUP.md](./LOCAL_SETUP.md#-demo-accounts) |
-
-> `.env` files are git-ignored. Never commit secrets — configure them locally, and in Render use environment variables marked `sync: false`.
-
-### 3. Seed the database
+### 5. Seed demo data (optional, idempotent)
 ```bash
-cd backend
-npm run seed        # creates demo accounts + demo course (safe to re-run)
+cd backend && npm run seed
 ```
 
-### 4. Frontend
+### 6. Run the backend
 ```bash
-cd frontend
-npm install
-echo "REACT_APP_API_URL=http://localhost:5000/api" > .env
+cd backend && npm run dev     # nodemon, or: npm start
+# API on http://localhost:5000  (health check: /api/health)
 ```
 
-### 5. Run
+### 7. Run the frontend
 ```bash
-# terminal 1
-cd backend && npm run dev        # http://localhost:5000
-
-# terminal 2
-cd frontend && npm start         # http://localhost:3000
+cd frontend && npm start      # http://localhost:3000
 ```
 
-### 6. Tests & production build
-```bash
-cd backend  && npm test          # backend automated tests (5/5)
-cd frontend && npm run build     # production build
+For full local setup, MongoDB-via-Docker instructions, troubleshooting, and demo-account credentials, see **[LOCAL_SETUP.md](./LOCAL_SETUP.md)**.
+
+---
+
+## Environment Variables
+
+Source of truth: `backend/.env.example`.
+
+| Variable | Scope | Description |
+|----------|-------|-------------|
+| `PORT` | backend | API port (default 5000) |
+| `MONGO_URI` | backend | MongoDB connection string |
+| `JWT_SECRET` | backend | **Required** — server refuses to start without it |
+| `JWT_EXPIRES_IN` | backend | Token lifetime (e.g. `7d`) |
+| `CLIENT_ORIGIN` | backend | Allowed browser origin(s) for CORS |
+| `PUBLIC_API_URL` | backend | Public base URL used for file links |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | backend | Optional — enable Cloudinary storage (otherwise files are stored locally) |
+| `DEMO_*_PASSWORD` | backend (seed only) | Fictional demo-account passwords used by `npm run seed`; documented in [LOCAL_SETUP.md](./LOCAL_SETUP.md) |
+| `REACT_APP_API_URL` | frontend | API base URL, baked in at build time |
+
+No secrets are committed; `.env` files are git-ignored.
+
+---
+
+## Project Structure
+
+```
+Dot-educational-platform/
+├── backend/
+│   ├── config/          # db, cloudinary, uploads
+│   ├── controllers/     # auth, users, courses, content, submissions, enrollments, notifications, uploads
+│   ├── middleware/      # auth (JWT + RBAC), upload validation, error handling
+│   ├── models/          # User, Course, Enrollment, Content, Submission, Notification
+│   ├── routes/          # REST route definitions
+│   ├── utils/           # permissions, courseAccess, attachments, gradebook, notifications, cors, serializers
+│   ├── tests/           # node --test suites
+│   ├── seed.js          # idempotent demo data
+│   └── server.js
+├── frontend/
+│   └── src/
+│       ├── pages/       # Login, dashboards, CoursePage, CreateContentPage
+│       ├── components/  # common, student, teacher (modals, roster, notifications, etc.)
+│       ├── context/     # AuthContext
+│       ├── hooks/       # useFocusTrap
+│       └── utils/       # api client, auth/route helpers, attachments, content types
+├── render.yaml          # Render deployment (API service + static SPA)
+└── LOCAL_SETUP.md
 ```
 
-Log in with any demo account — see **[LOCAL_SETUP.md](./LOCAL_SETUP.md)** for full setup and credentials.
+---
+
+## Application Flow
+
+- **Auth:** `POST /api/auth/login` returns a JWT; the SPA stores it and sends it as a Bearer token. `GET /api/auth/me` bootstraps the session; inactive or invalid tokens are rejected.
+- **Courses:** listing is role-scoped (students see enrolled courses, teachers see owned, managers see all); create/edit/delete and roster actions are ownership- and role-checked.
+- **Content:** teachers/managers create typed content and publish or keep it as a draft; students only ever receive published content.
+- **Submissions & grading:** students submit to published tasks (late submissions accepted and flagged server-side); teachers/managers review and grade; grades and feedback flow back to the student and gradebook.
+- **Notifications:** enrollment, new published tasks/announcements, and grading generate in-app notifications, scoped strictly to their recipient.
 
 ---
 
-## ☁️ Deployment
+## Current Status
 
-Deployed on **Render** via [`render.yaml`](./render.yaml) as two services:
-
-| Service | Type | Role |
-|---------|------|------|
-| `dot-vqx9` | Static site | React build (`frontend/build`) with SPA rewrite → **[live app](https://dot-vqx9.onrender.com/)** |
-| `dot-project-2asd` | Node web service | Express API with a `/api/health` health check |
-
-Secrets (`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_*`) are configured in Render (`sync: false`) and never committed.
-
----
-
-## 📚 Documentation
-
-This repository includes detailed engineering documentation produced during development and auditing:
-
-| Document | Contents |
-|----------|----------|
-| [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) | Architecture, stack, and how the system runs |
-| [LOCAL_SETUP.md](./LOCAL_SETUP.md) | Full local setup + demo accounts |
-| [FULL_AUDIT_REPORT.md](./FULL_AUDIT_REPORT.md) | Backend/security audit findings |
-| [BUG_REPORT.md](./BUG_REPORT.md) | Issues found (structured) |
-| [FIXES_APPLIED.md](./FIXES_APPLIED.md) | Fixes with verification |
-| [TEST_RESULTS.md](./TEST_RESULTS.md) | Test & build results |
-| [FRONTEND_AUDIT_REPORT.md](./FRONTEND_AUDIT_REPORT.md) | Frontend / UI / accessibility audit |
-| [FRONTEND_FIXES.md](./FRONTEND_FIXES.md) | Frontend fixes with verification |
-| [UI_UX_TEST_RESULTS.md](./UI_UX_TEST_RESULTS.md) | Responsive & UX test matrix |
+- Core educational workflows implemented and verified (auth, content lifecycle, submissions, grading, gradebook, deadlines)
+- Course management implemented (create/edit/delete) for teachers and managers
+- Enrollment and roster management implemented
+- In-app notifications implemented
+- Security hardening completed for the identified findings (F1–F5 and related controls)
+- Automated backend regression suite passing (149 tests, run twice)
+- Frontend production build passing
+- Final QA verified in-browser across all roles with clean console/network and intact data integrity
 
 ---
 
-## 🗺️ Roadmap
+## Known Limitations / Future Improvements
 
-- [ ] **Grading** — scores & feedback on submissions (data model already supports it)
-- [ ] **Progress dashboards** — richer per-student analytics
-- [ ] **Notifications** — in-app and email alerts for new content and deadlines
-- [ ] **Attendance** tracking
-- [ ] **Discussions / comments** on content
-- [ ] **Dark mode**
-- [ ] **Expanded frontend testing** (React Testing Library) and **CI/CD**
+Framed as planned engineering work, not blockers:
 
----
-
-## 💡 Engineering Highlights
-
-- **Full-stack MERN architecture** with a clear routes → controllers → models separation
-- **Role-based, ownership-aware authorization** enforced on both the API and the SPA
-- **Secure authentication** — JWT + bcrypt, `select:false` password field, login rate limiting, fail-fast config
-- **File-upload architecture** with a local/Cloudinary strategy chosen by environment
-- **Responsive, accessible UI** — mobile drawer nav, focus-trapped modals, associated labels, verified overflow-free 320→1920px
-- **Automated backend verification** (`node:test`) and a linted production build
-- **Idempotent, non-destructive seeding** — one account per role, wired to real course data, safe to re-run
-- **Structured audit documentation** — the engineering process is written down, not just the code
+- **React Router major upgrade:** migrate from v6 to v7 to clear a dependency advisory (not exploitable in this non-SSR SPA) — deferred to avoid a breaking change without dedicated route regression.
+- **Build-toolchain modernization:** the Create React App toolchain carries transitive dev-dependency advisories; migrating to a modern bundler (e.g. Vite) would resolve them and speed up builds.
+- **Content Security Policy:** add a CSP tailored to the SPA and embedded media as an additional hardening layer.
+- **Richer analytics / attendance:** deeper per-student progress analytics and attendance tracking are candidate future features.
 
 ---
 
-## 👤 Author & Project
+## Screenshots
 
-**Dot Jordan** is a full-stack Learning Management System built as a portfolio project around a Jordanian full-stack bootcamp use case.
-
-- 🌐 **Live demo:** [dot-vqx9.onrender.com](https://dot-vqx9.onrender.com/)
-- 💻 **Repository:** [github.com/aya2404/Dot-educational-platform](https://github.com/aya2404/Dot-educational-platform)
-- 🎥 **Demo video:** _LinkedIn (link coming soon)_
-- 📄 **License:** MIT
-
-> Feedback and contributions are welcome — open an issue or a pull request.
+No screenshots are included in the repository. Screens (dashboards, course management, submission and grading flows) can be captured from a running instance and added here for portfolio presentation.
 
 ---
 
-<div align="center">
+## License
 
-Built with 💚 using the MERN stack · [Live Demo](https://dot-vqx9.onrender.com/) · [Repository](https://github.com/aya2404/Dot-educational-platform)
+No license file is currently included in the repository. Add one before public reuse if desired.
 
-</div>
+---
+
+## Author
+
+Developed by **Aya Abu Taha**.
+Repository: [github.com/aya2404/Dot-educational-platform](https://github.com/aya2404/Dot-educational-platform)
