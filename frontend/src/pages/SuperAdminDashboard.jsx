@@ -13,6 +13,7 @@ import ConfirmModal from '../components/common/ConfirmModal';
 import Loader from '../components/common/Loader';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { getCreateContentPath, getRoleCoursePath, ROLE_LABELS } from '../utils/auth';
 
 const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
@@ -25,11 +26,13 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
         { id: 'users', label: 'المستخدمون' },
         { id: 'courses', label: 'الكورسات' },
         { id: 'enrollments', label: 'التسجيلات' },
+        { id: 'branding', label: 'إعدادات المنصة' },
       ]
     : [
         { id: 'overview', label: 'نظرة عامة' },
         { id: 'users', label: 'المستخدمون' },
         { id: 'courses', label: 'الكورسات' },
+        { id: 'branding', label: 'إعدادات المنصة' },
       ];
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -48,6 +51,57 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
   const [pendingDeactivation, setPendingDeactivation] = useState(null);
 
   const currentUserId = currentUser?._id || currentUser?.id;
+
+  // ---- White-label branding settings (Organization) ----
+  const { refreshTheme } = useTheme();
+  const [brandForm, setBrandForm] = useState({
+    platformName: '',
+    primaryColor: '#6d5acf',
+    secondaryColor: '#ff6b6b',
+    logoUrl: '',
+  });
+  const [brandLoaded, setBrandLoaded] = useState(false);
+  const [brandSaving, setBrandSaving] = useState(false);
+  const [brandMessage, setBrandMessage] = useState({ type: '', text: '' });
+
+  useEffect(() => {
+    if (activeTab !== 'branding' || brandLoaded) return;
+    let active = true;
+    (async () => {
+      try {
+        const response = await api.get('/organizations/settings');
+        const settings = response.data.data || {};
+        if (!active) return;
+        setBrandForm({
+          platformName: settings.platformName || '',
+          primaryColor: settings.primaryColor || '#6d5acf',
+          secondaryColor: settings.secondaryColor || '#ff6b6b',
+          logoUrl: settings.logoUrl || '',
+        });
+        setBrandLoaded(true);
+      } catch {
+        if (active) setBrandMessage({ type: 'danger', text: 'تعذر تحميل إعدادات المنصة' });
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [activeTab, brandLoaded]);
+
+  const handleSaveBranding = async (event) => {
+    event.preventDefault();
+    setBrandSaving(true);
+    setBrandMessage({ type: '', text: '' });
+    try {
+      await api.put('/organizations/settings', brandForm);
+      await refreshTheme?.(); // apply the new colors/title immediately
+      setBrandMessage({ type: 'success', text: 'تم حفظ إعدادات المنصة' });
+    } catch (requestError) {
+      setBrandMessage({ type: 'danger', text: requestError.response?.data?.message || 'تعذر حفظ الإعدادات' });
+    } finally {
+      setBrandSaving(false);
+    }
+  };
 
   const applyActiveState = async (targetUser, nextActive) => {
     setTogglingUserId(targetUser._id);
@@ -526,6 +580,76 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
 
               <button type="submit" className="btn btn-primary" disabled={enrolling}>
                 {enrolling ? 'جاري التسجيل...' : 'تسجيل الطالب'}
+              </button>
+            </form>
+          </section>
+        ) : null}
+
+        {!isLoading && !error && activeTab === 'branding' ? (
+          <section className="surface-card" style={{ maxWidth: 560 }}>
+            <div className="section-heading">
+              <div>
+                <h2 className="section-heading__title">إعدادات المنصة (العلامة التجارية)</h2>
+              </div>
+            </div>
+
+            {brandMessage.text ? (
+              <div className={`alert alert-${brandMessage.type}`}>{brandMessage.text}</div>
+            ) : null}
+
+            <form className="d-flex flex-column gap-3" onSubmit={handleSaveBranding}>
+              <div>
+                <label className="form-label" htmlFor="brand-name">اسم المنصة</label>
+                <input
+                  id="brand-name"
+                  className="form-control"
+                  value={brandForm.platformName}
+                  onChange={(event) => setBrandForm((form) => ({ ...form, platformName: event.target.value }))}
+                  disabled={brandSaving}
+                />
+              </div>
+
+              <div className="d-flex gap-3 flex-wrap">
+                <div className="flex-grow-1">
+                  <label className="form-label" htmlFor="brand-primary">اللون الأساسي</label>
+                  <input
+                    id="brand-primary"
+                    type="color"
+                    className="form-control form-control-color"
+                    value={brandForm.primaryColor}
+                    onChange={(event) => setBrandForm((form) => ({ ...form, primaryColor: event.target.value }))}
+                    disabled={brandSaving}
+                    title="اللون الأساسي"
+                  />
+                </div>
+                <div className="flex-grow-1">
+                  <label className="form-label" htmlFor="brand-secondary">اللون الثانوي</label>
+                  <input
+                    id="brand-secondary"
+                    type="color"
+                    className="form-control form-control-color"
+                    value={brandForm.secondaryColor}
+                    onChange={(event) => setBrandForm((form) => ({ ...form, secondaryColor: event.target.value }))}
+                    disabled={brandSaving}
+                    title="اللون الثانوي"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label" htmlFor="brand-logo">رابط الشعار (اختياري)</label>
+                <input
+                  id="brand-logo"
+                  className="form-control"
+                  placeholder="https://... أو /uploads/..."
+                  value={brandForm.logoUrl}
+                  onChange={(event) => setBrandForm((form) => ({ ...form, logoUrl: event.target.value }))}
+                  disabled={brandSaving}
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary align-self-start" disabled={brandSaving}>
+                {brandSaving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
               </button>
             </form>
           </section>

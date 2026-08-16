@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BsArrowLeft,
+  BsBarChartLineFill,
   BsBookHalf,
   BsCalendarWeek,
   BsCheck2Circle,
   BsClockHistory,
+  BsSend,
 } from 'react-icons/bs';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
@@ -23,6 +25,108 @@ const DAY_AR = {
   Saturday: 'السبت',
 };
 
+// --- Lightweight, dependency-free SVG/CSS charts (no charting library) ---
+
+const ProgressRing = ({ value, total }) => {
+  const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
+  const radius = 44;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (pct / 100) * circumference;
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" role="img" aria-label={`${pct}٪ مكتمل`}>
+      <circle cx="60" cy="60" r={radius} fill="none" stroke="var(--dj-border)" strokeWidth="10" />
+      <circle
+        cx="60"
+        cy="60"
+        r={radius}
+        fill="none"
+        stroke="var(--dj-primary)"
+        strokeWidth="10"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        transform="rotate(-90 60 60)"
+      />
+      <text x="60" y="66" textAnchor="middle" fontSize="22" fontWeight="700" fill="var(--dj-primary)">
+        {pct}٪
+      </text>
+    </svg>
+  );
+};
+
+const GradeBars = ({ data }) => {
+  if (!data || data.length === 0) {
+    return <p className="text-muted mb-0">لا توجد درجات بعد</p>;
+  }
+  return (
+    <div className="d-flex align-items-end gap-3" style={{ height: 170 }}>
+      {data.map((entry) => (
+        <div
+          key={entry.course}
+          className="d-flex flex-column align-items-center justify-content-end"
+          style={{ flex: 1, minWidth: 0, height: '100%' }}
+        >
+          <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{entry.average}٪</span>
+          <div
+            style={{
+              width: '70%',
+              maxWidth: 40,
+              height: `${Math.max(4, (entry.average / 100) * 120)}px`,
+              background: 'var(--dj-primary)',
+              borderRadius: '8px 8px 4px 4px',
+            }}
+          />
+          <span
+            style={{
+              fontSize: '0.7rem',
+              color: 'var(--dj-text-muted)',
+              maxWidth: '100%',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {entry.course}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const ActivityLine = ({ data }) => {
+  if (!data || data.length === 0) {
+    return <p className="text-muted mb-0">لا يوجد نشاط</p>;
+  }
+  const width = 300;
+  const height = 130;
+  const pad = 22;
+  const max = Math.max(1, ...data.map((d) => d.count));
+  const step = (width - pad * 2) / Math.max(1, data.length - 1);
+  const point = (d, i) => {
+    const x = pad + i * step;
+    const y = height - pad - (d.count / max) * (height - pad * 2);
+    return { x, y };
+  };
+  const polyline = data.map((d, i) => { const { x, y } = point(d, i); return `${x},${y}`; }).join(' ');
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="نشاط التسليمات آخر 7 أيام">
+      <polyline
+        fill="none"
+        stroke="var(--dj-primary)"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        points={polyline}
+      />
+      {data.map((d, i) => {
+        const { x, y } = point(d, i);
+        return <circle key={d.date} cx={x} cy={y} r="3.5" fill="var(--dj-primary)" />;
+      })}
+    </svg>
+  );
+};
+
 const StudentDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -30,6 +134,9 @@ const StudentDashboard = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     const fetchEnrollments = async () => {
@@ -43,7 +150,19 @@ const StudentDashboard = () => {
       }
     };
 
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/analytics/student');
+        setStats(response.data.data || null);
+      } catch {
+        setStats(null); // analytics are supplementary — never block the dashboard
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
     fetchEnrollments();
+    fetchStats();
   }, []);
 
   const totalCompletedLectures = enrollments.reduce(
@@ -83,6 +202,59 @@ const StudentDashboard = () => {
               <span>محاضرات مكتملة</span>
             </div>
           </article>
+          <article className="metric-card">
+            <span className="metric-card__icon">
+              <BsBarChartLineFill size={18} />
+            </span>
+            <div>
+              <strong>{stats ? `${stats.averageGrade}٪` : '—'}</strong>
+              <span>متوسط الدرجات</span>
+            </div>
+          </article>
+          <article className="metric-card">
+            <span className="metric-card__icon">
+              <BsSend size={18} />
+            </span>
+            <div>
+              <strong>{stats ? stats.submissionsCount : '—'}</strong>
+              <span>التسليمات</span>
+            </div>
+          </article>
+        </section>
+
+        <section className="surface-card">
+          <div className="section-heading">
+            <div>
+              <h2 className="section-heading__title">التحليلات</h2>
+            </div>
+          </div>
+
+          {statsLoading ? (
+            <Loader variant="section" />
+          ) : !stats ? (
+            <div className="empty-panel compact">
+              <h3>لا تتوفر تحليلات حالياً</h3>
+            </div>
+          ) : (
+            <div className="row g-4">
+              <div className="col-12 col-md-4">
+                <div className="d-flex flex-column align-items-center gap-2">
+                  <ProgressRing value={stats.completedLectures} total={stats.totalLectures} />
+                  <span className="text-muted">
+                    {stats.completedLectures} / {stats.totalLectures} محاضرة مكتملة
+                  </span>
+                </div>
+              </div>
+              <div className="col-12 col-md-8">
+                <h3 style={{ fontSize: '0.95rem' }}>الدرجات حسب الكورس</h3>
+                <GradeBars data={stats.gradeByCourse} />
+              </div>
+              <div className="col-12">
+                <h3 style={{ fontSize: '0.95rem' }}>نشاط التسليمات (آخر 7 أيام)</h3>
+                <ActivityLine data={stats.recentActivity} />
+              </div>
+            </div>
+          )}
         </section>
 
         <UpcomingDeadlines />

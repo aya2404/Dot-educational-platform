@@ -4,6 +4,8 @@
 :root {
   --dj-primary: #203f9a;
   --dj-primary-soft: #bdcfff;
+  /* White-label brand colors (overridden at runtime by ThemeContext). */
+  --dj-secondary: #ff6b6b;
   --dj-secondary-soft: #b8c0ff;
   --dj-lilac: #c8b6fe;
   --dj-rose: #e7c5ff;

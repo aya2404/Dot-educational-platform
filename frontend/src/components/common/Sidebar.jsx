@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   BsBoxArrowRight,
+  BsGraphUpArrow,
   BsHouseDoor,
   BsPlusSquare,
   BsShieldCheck,
@@ -21,10 +22,12 @@ const NAV_LINKS = {
   ],
   admin: [
     { path: '/admin', label: 'لوحة الإدارة', icon: BsShieldCheck },
+    { path: '/executive-dashboard', label: 'المؤشرات', icon: BsGraphUpArrow },
     { path: '/admin/content/new', label: 'إضافة محتوى', icon: BsPlusSquare },
   ],
   superadmin: [
     { path: '/superadmin', label: 'لوحة الإدارة', icon: BsShieldCheck },
+    { path: '/executive-dashboard', label: 'المؤشرات', icon: BsGraphUpArrow },
     { path: '/superadmin/content/new', label: 'إضافة محتوى', icon: BsPlusSquare },
   ],
 };

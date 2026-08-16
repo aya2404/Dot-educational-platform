@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Loader from './components/common/Loader';
 import LoginPage from './pages/LoginPage';
@@ -17,6 +18,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 const CoursePage = lazy(() => import('./pages/CoursePage'));
 const CreateContentPage = lazy(() => import('./pages/CreateContentPage'));
+const ExecutiveDashboard = lazy(() => import('./pages/ExecutiveDashboard'));
 
 const SessionRedirect = () => {
   const { user, loading } = useAuth();
@@ -165,6 +167,14 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
+    <Route
+      path="/executive-dashboard"
+      element={
+        <ProtectedRoute roles={['admin', 'superadmin']}>
+          <ExecutiveDashboard />
+        </ProtectedRoute>
+      }
+    />
     <Route path="*" element={<SessionRedirect />} />
   </Routes>
 );
@@ -172,9 +182,11 @@ const AppRoutes = () => (
 const App = () => (
   <BrowserRouter>
     <AuthProvider>
-      <Suspense fallback={<Loader variant="page" />}>
-        <AppRoutes />
-      </Suspense>
+      <ThemeProvider>
+        <Suspense fallback={<Loader variant="page" />}>
+          <AppRoutes />
+        </Suspense>
+      </ThemeProvider>
     </AuthProvider>
   </BrowserRouter>
 );
