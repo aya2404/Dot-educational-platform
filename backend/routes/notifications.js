@@ -6,6 +6,7 @@ const {
   getUnreadCount,
   markRead,
   markAllRead,
+  deleteNotification,
 } = require('../controllers/notificationController');
 
 // Every notification route requires authentication and is scoped to req.user.
@@ -16,5 +17,6 @@ router.get('/', getMyNotifications);
 router.get('/unread-count', getUnreadCount);
 router.patch('/read-all', markAllRead);
 router.patch('/:id/read', markRead);
+router.delete('/:id', deleteNotification);
 
 module.exports = router;

@@ -194,6 +194,17 @@ const gradeSubmission = async (req, res) => {
       });
     }
 
+    // Multi-tenancy: an Organization Admin may only grade submissions in their
+    // own tenant (a submission's tenant is its course's tenant). Super Admin is
+    // unrestricted; teachers are already ownership-scoped. Respond as not-found
+    // to avoid cross-tenant disclosure. Missing tenant -> 'default' (with a warning).
+    if (!req.tenantId) {
+      console.warn('gradeSubmission: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user.role === 'admin' && access.course.tenantId !== (req.tenantId || 'default')) {
+      return res.status(404).json({ success: false, message: 'التسليم غير موجود' });
+    }
+
     const maxScore = typeof task.maxScore === 'number' ? task.maxScore : 100;
     const rawGrade = req.body.grade;
     const grade = Number(rawGrade);

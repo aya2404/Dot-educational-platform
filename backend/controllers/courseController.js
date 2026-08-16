@@ -54,6 +54,14 @@ const getAllCourses = async (req, res) => {
   try {
     const query = {};
 
+    // Multi-tenancy read isolation: scope to the caller's tenant unless Super Admin.
+    if (!req.tenantId) {
+      console.warn('getAllCourses: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user?.role !== 'superadmin') {
+      query.tenantId = req.tenantId || 'default';
+    }
+
     if (req.user.role === 'teacher') {
       query.teacher = req.user._id;
     } else if (req.user.role === 'student') {
@@ -91,6 +99,15 @@ const getCourseById = async (req, res) => {
       });
     }
 
+    // Multi-tenancy read isolation: a non-superadmin may only read a course in
+    // their own tenant. Respond as not-found to avoid cross-tenant disclosure.
+    if (!req.tenantId) {
+      console.warn('getCourseById: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user?.role !== 'superadmin' && access.course.tenantId !== (req.tenantId || 'default')) {
+      return res.status(404).json({ success: false, message: 'الكورس غير موجود' });
+    }
+
     return res.json({ success: true, data: access.course });
   } catch (error) {
     console.error('getCourseById error:', error);
@@ -123,6 +140,13 @@ const createCourse = async (req, res) => {
       ownerTeacherId = teacher;
     }
 
+    // Multi-tenancy: a course inherits the creator's tenant. `protect` sets
+    // req.tenantId; fall back to 'default' (and warn) only if it is absent.
+    if (!req.tenantId) {
+      console.warn('createCourse: req.tenantId missing — defaulting to "default" tenant');
+    }
+    const tenantId = req.tenantId || 'default';
+
     const course = await Course.create({
       name: name.trim(),
       description: description?.trim() || '',
@@ -131,6 +155,7 @@ const createCourse = async (req, res) => {
       time: time?.trim() || '',
       days: Array.isArray(days) ? days : [],
       startDate: startDate || null,
+      tenantId,
     });
 
     await course.populate('teacher', 'name studentId username');
@@ -156,6 +181,15 @@ const updateCourse = async (req, res) => {
         success: false,
         message: access.message,
       });
+    }
+
+    // Multi-tenancy: an Organization Admin may only modify a course in their own
+    // tenant. Super Admin is unrestricted; teachers are already ownership-scoped.
+    if (!req.tenantId) {
+      console.warn('updateCourse: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user.role === 'admin' && access.course.tenantId !== (req.tenantId || 'default')) {
+      return res.status(404).json({ success: false, message: 'الكورس غير موجود' });
     }
 
     const { name, description, teacher, group, time, days, startDate } = req.body;
@@ -216,6 +250,15 @@ const deleteCourse = async (req, res) => {
         success: false,
         message: access.message,
       });
+    }
+
+    // Multi-tenancy: an Organization Admin may only delete a course in their own
+    // tenant. Super Admin is unrestricted; teachers are already ownership-scoped.
+    if (!req.tenantId) {
+      console.warn('deleteCourse: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user.role === 'admin' && access.course.tenantId !== (req.tenantId || 'default')) {
+      return res.status(404).json({ success: false, message: 'الكورس غير موجود' });
     }
 
     const contentItems = await Content.find({ course: access.course._id }).select('_id');

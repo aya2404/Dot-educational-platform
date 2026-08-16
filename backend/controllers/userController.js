@@ -36,6 +36,15 @@ const getAllUsers = async (req, res) => {
     // operator. Only a non-empty string acts as a filter; anything else lists all.
     const role = typeof req.query.role === 'string' ? req.query.role.trim() : '';
     const query = role ? { role } : {};
+
+    // Multi-tenancy read isolation: scope to the caller's tenant unless Super Admin.
+    if (!req.tenantId) {
+      console.warn('getAllUsers: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user?.role !== 'superadmin') {
+      query.tenantId = req.tenantId || 'default';
+    }
+
     const users = await User.find(query)
       .select('-password')
       .sort({ createdAt: -1 });
@@ -60,6 +69,15 @@ const getUserById = async (req, res) => {
     const user = await User.findById(req.params.id).select('-password');
 
     if (!user) {
+      return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+    }
+
+    // Multi-tenancy read isolation: a non-superadmin may only read a user in
+    // their own tenant. Respond as not-found to avoid cross-tenant disclosure.
+    if (!req.tenantId) {
+      console.warn('getUserById: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user?.role !== 'superadmin' && user.tenantId !== (req.tenantId || 'default')) {
       return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
     }
 
@@ -96,12 +114,21 @@ const createUser = async (req, res) => {
       ? customUsername.trim().toLowerCase()
       : await generateUsername(role);
 
+    // Multi-tenancy: the new account inherits the creating admin's tenant
+    // (req.tenantId, set by `protect`); fall back to 'default' (and warn) only
+    // if it is somehow absent.
+    if (!req.tenantId) {
+      console.warn('createUser: req.tenantId missing — defaulting to "default" tenant');
+    }
+    const tenantId = req.tenantId || 'default';
+
     const user = await User.create({
       name: name.trim(),
       username,
       studentId: await User.generateStudentId(role),
       password,
       role,
+      tenantId,
     });
 
     return res.status(201).json({
@@ -140,6 +167,24 @@ const updateUser = async (req, res) => {
         success: false,
         message: 'فقط المشرف الرئيسي يمكنه تعديل حسابات الإدارة',
       });
+    }
+
+    // Multi-tenancy: an Organization Admin may only manage users in their own
+    // tenant, and may never escalate an account to Super Admin. Super Admin is
+    // unrestricted. Missing tenant -> 'default' (with a warning).
+    if (!req.tenantId) {
+      console.warn('updateUser: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user.role === 'admin') {
+      if (user.tenantId !== (req.tenantId || 'default')) {
+        return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+      }
+      if (req.body.role === 'superadmin') {
+        return res.status(403).json({
+          success: false,
+          message: 'لا تملك صلاحية ترقية الحساب إلى مشرف رئيسي',
+        });
+      }
     }
 
     // Guard the activation flag transition. Activation and idempotent no-ops are
@@ -237,6 +282,15 @@ const deleteUser = async (req, res) => {
         success: false,
         message: 'فقط المشرف الرئيسي يمكنه حذف حسابات الإدارة',
       });
+    }
+
+    // Multi-tenancy: an Organization Admin may only delete users in their own
+    // tenant. Super Admin is unrestricted. Missing tenant -> 'default' (warn).
+    if (!req.tenantId) {
+      console.warn('deleteUser: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user.role === 'admin' && user.tenantId !== (req.tenantId || 'default')) {
+      return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
     }
 
     await user.deleteOne();

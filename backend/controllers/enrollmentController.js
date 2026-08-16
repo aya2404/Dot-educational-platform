@@ -69,9 +69,18 @@ const enrollStudent = async (req, res) => {
       return res.status(access.statusCode).json({ success: false, message: access.message });
     }
 
+    // Multi-tenancy: the enrollment inherits the acting manager/teacher's tenant
+    // (req.tenantId, set by `protect`); fall back to 'default' (and warn) only
+    // if it is somehow absent.
+    if (!req.tenantId) {
+      console.warn('enrollStudent: req.tenantId missing — defaulting to "default" tenant');
+    }
+    const tenantId = req.tenantId || 'default';
+
     const enrollment = await Enrollment.create({
       student: student._id,
       course: access.course._id,
+      tenantId,
     });
 
     // Notify the enrolled student (non-blocking — never fails the enrolment).
@@ -132,10 +141,16 @@ const unenrollStudent = async (req, res) => {
 
 const getMyEnrollments = async (req, res) => {
   try {
-    const enrollments = await Enrollment.find({
-      student: req.user._id,
-      isActive: true,
-    }).populate({
+    // Multi-tenancy read isolation: scope to the caller's tenant unless Super Admin.
+    const enrollmentFilter = { student: req.user._id, isActive: true };
+    if (!req.tenantId) {
+      console.warn('getMyEnrollments: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user?.role !== 'superadmin') {
+      enrollmentFilter.tenantId = req.tenantId || 'default';
+    }
+
+    const enrollments = await Enrollment.find(enrollmentFilter).populate({
       path: 'course',
       populate: { path: 'teacher', select: 'name' },
     });
@@ -227,11 +242,16 @@ const getStudentProgress = async (req, res) => {
       return res.status(400).json({ success: false, message: 'معرف الكورس غير صالح' });
     }
 
-    const enrollment = await Enrollment.findOne({
-      student: req.user._id,
-      course: req.params.courseId,
-      isActive: true,
-    });
+    // Multi-tenancy read isolation: scope to the caller's tenant unless Super Admin.
+    const progressFilter = { student: req.user._id, course: req.params.courseId, isActive: true };
+    if (!req.tenantId) {
+      console.warn('getStudentProgress: req.tenantId missing — defaulting to "default" tenant');
+    }
+    if (req.user?.role !== 'superadmin') {
+      progressFilter.tenantId = req.tenantId || 'default';
+    }
+
+    const enrollment = await Enrollment.findOne(progressFilter);
 
     if (!enrollment) {
       return res.status(404).json({ success: false, message: 'التسجيل غير موجود' });

@@ -51,6 +51,15 @@ const notificationSchema = new mongoose.Schema(
       type:    Boolean,
       default: false,
     },
+
+    // Multi-tenancy isolation key. A notification belongs to its recipient's
+    // tenant; legacy/unspecified records fall back to the shared 'default' tenant.
+    tenantId: {
+      type:     String,
+      required: true,
+      default:  'default',
+      index:    true,
+    },
   },
   {
     timestamps: true,

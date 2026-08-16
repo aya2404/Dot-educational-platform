@@ -1,0 +1,39 @@
+/* Floating chat launcher + panel, pinned bottom-right.
+   On desktop the fixed right sidebar (var(--dj-sidebar-width)) occupies the
+   right edge, so the widget is offset to sit just inside the content area; on
+   mobile the sidebar is off-canvas, so it uses the true bottom-right corner. */
+
+.chat-widget-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1090;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: var(--dj-shadow-soft);
+}
+
+.chat-widget-panel {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1091;
+  width: min(360px, calc(100vw - 32px));
+  height: min(520px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 992px) {
+  .chat-widget-fab,
+  .chat-widget-panel {
+    right: calc(var(--dj-sidebar-width) + 24px);
+  }
+}

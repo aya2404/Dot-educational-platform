@@ -26,6 +26,15 @@ const enrollmentSchema = new mongoose.Schema
       type:Boolean,
       default: true,
     },
+
+    // Multi-tenancy isolation key. Every enrollment belongs to exactly one
+    // tenant; legacy/unspecified records fall back to the shared 'default' tenant.
+    tenantId: {
+      type: String,
+      required: true,
+      default: 'default',
+      index: true,
+    },
   },
   {
     timestamps: true,

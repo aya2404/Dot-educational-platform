@@ -14,6 +14,7 @@ const submissionRoutes = require('./routes/submissions');
 const enrollmentRoutes = require('./routes/enrollments');
 const uploadRoutes = require('./routes/uploads');
 const notificationRoutes = require('./routes/notifications');
+const chatRoutes = require('./routes/chat');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/chats', chatRoutes);
 app.use(
   '/uploads',
   express.static(path.join(__dirname, 'uploads'), {

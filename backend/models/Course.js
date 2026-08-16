@@ -41,6 +41,15 @@ const courseSchema = new mongoose.Schema
       type: Date,
     },
 
+    // Multi-tenancy isolation key. Every course belongs to exactly one tenant;
+    // legacy/unspecified records fall back to the shared 'default' tenant.
+    tenantId: {
+      type: String,
+      required: true,
+      default: 'default',
+      index: true,
+    },
+
   },
   {
     //createdAt & updatedAt automatically

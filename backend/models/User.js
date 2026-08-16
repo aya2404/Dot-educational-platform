@@ -57,6 +57,15 @@ const userSchema = new mongoose.Schema(
       default: '',
     },
 
+    // Multi-tenancy isolation key. Every user belongs to exactly one tenant;
+    // legacy/unspecified records fall back to the shared 'default' tenant.
+    tenantId: {
+      type: String,
+      required: true,
+      default: 'default',
+      index: true,
+    },
+
   },
   {
     timestamps: true,

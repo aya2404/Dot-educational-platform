@@ -12,6 +12,7 @@ import {
 } from 'react-icons/bs';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
+import ChatWidget from '../components/common/ChatWidget';
 import ConfirmModal from '../components/common/ConfirmModal';
 import Loader from '../components/common/Loader';
 import Timeline from '../components/student/Timeline';
@@ -270,6 +271,8 @@ const CoursePage = () => {
         onCancel={() => !deletingCourse && setPendingCourseDelete(false)}
         onConfirm={handleDeleteCourse}
       />
+
+      {course && <ChatWidget course={course} />}
     </AppLayout>
   );
 };
