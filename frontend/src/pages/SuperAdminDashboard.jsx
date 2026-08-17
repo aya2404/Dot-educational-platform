@@ -279,18 +279,27 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
           </article>
         </section>
 
-        <div className="tab-strip">
-          {availableTabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`tab-strip__button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <ul className="nav nav-pills gap-2 mb-4">
+          {availableTabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <li className="nav-item" key={tab.id}>
+                <button
+                  type="button"
+                  className={`nav-link px-3 ${isActive ? 'active' : ''}`}
+                  style={
+                    isActive
+                      ? { backgroundColor: 'var(--dj-primary)', borderColor: 'var(--dj-primary)' }
+                      : { color: 'var(--dj-primary)' }
+                  }
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
 
         {isLoading ? <Loader variant="section" card /> : null}
 

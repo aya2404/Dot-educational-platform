@@ -237,18 +237,21 @@ const CreateContentPage = () => {
 
                     <div>
                       <label className="form-label">نوع المحتوى</label>
-                      <div className="type-selector">
-                        {Object.entries(CONTENT_TYPES).map(([typeKey, config]) => (
-                          <button
-                            key={typeKey}
-                            type="button"
-                            className={`type-selector__button ${form.type === typeKey ? 'active' : ''}`}
-                            style={form.type === typeKey ? { backgroundColor: config.bgColor } : undefined}
-                            onClick={() => handleChange('type', typeKey)}
-                          >
-                            {config.label}
-                          </button>
-                        ))}
+                      <div className="d-flex flex-wrap gap-2" role="group" aria-label="نوع المحتوى">
+                        {Object.entries(CONTENT_TYPES).map(([typeKey, config]) => {
+                          const isActive = form.type === typeKey;
+                          return (
+                            <button
+                              key={typeKey}
+                              type="button"
+                              className={`btn ${isActive ? 'btn-primary' : 'btn-outline-primary'}`}
+                              aria-pressed={isActive}
+                              onClick={() => handleChange('type', typeKey)}
+                            >
+                              {config.label}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
