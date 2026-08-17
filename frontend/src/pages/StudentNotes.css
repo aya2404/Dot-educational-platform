@@ -1,0 +1,123 @@
+/* Pinterest/Miro-style sticky-note board. */
+.notes-board {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.note-card {
+  width: 260px;
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 14px;
+  border-radius: 10px 16px 12px 16px;
+  box-shadow: 0 10px 22px rgba(31, 41, 55, 0.12);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.note-card.is-dragging {
+  transform: rotate(-1.5deg);
+  box-shadow: 0 18px 36px rgba(31, 41, 55, 0.22);
+}
+
+.note-card__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: grab;
+  color: rgba(31, 41, 55, 0.55);
+}
+
+.note-card__bar:active {
+  cursor: grabbing;
+}
+
+.note-card__icon-btn {
+  border: none;
+  background: transparent;
+  color: rgba(31, 41, 55, 0.6);
+  padding: 4px;
+  border-radius: 8px;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.note-card__icon-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--dj-primary, #6d5acf);
+}
+
+.note-card__icon-btn--danger:hover {
+  color: #b42318;
+}
+
+.note-card__title {
+  border: none;
+  background: transparent;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1f2937;
+  padding: 2px 0;
+}
+
+.note-card__title:focus {
+  outline: none;
+  border-bottom: 1px dashed rgba(31, 41, 55, 0.3);
+}
+
+/* Handwriting font for the note body. */
+.note-card__content {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-family: 'Caveat', 'IBM Plex Sans Arabic', cursive;
+  font-size: 1.35rem;
+  line-height: 1.35;
+  color: #1f2937;
+  padding: 2px 0;
+}
+
+.note-card__content:focus {
+  outline: none;
+}
+
+.note-card__palette {
+  display: flex;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.note-card__swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0;
+}
+
+.note-card__swatch.active {
+  border-color: rgba(31, 41, 55, 0.65);
+  transform: scale(1.1);
+}
+
+.note-card__course {
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(31, 41, 55, 0.15);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 575px) {
+  .notes-board {
+    justify-content: center;
+  }
+  .note-card {
+    width: 100%;
+    max-width: 320px;
+  }
+}

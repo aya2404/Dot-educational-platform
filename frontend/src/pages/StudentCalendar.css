@@ -1,0 +1,83 @@
+/* Theme overrides for react-big-calendar so it matches the Dot purple identity
+   and reads correctly in RTL. Scoped under .student-calendar to avoid leaking. */
+
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 0.82rem;
+  color: var(--dj-text-muted, #6b7280);
+}
+
+.calendar-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendar-legend__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Toolbar buttons -> themed pills. */
+.student-calendar .rbc-toolbar button {
+  color: var(--dj-primary, #6d5acf);
+  border-color: rgba(109, 90, 207, 0.35);
+  border-radius: 8px;
+}
+
+.student-calendar .rbc-toolbar button:hover,
+.student-calendar .rbc-toolbar button:focus {
+  background: var(--dj-primary-soft, #e0d4ff);
+  border-color: var(--dj-primary, #6d5acf);
+  color: var(--dj-primary, #6d5acf);
+}
+
+.student-calendar .rbc-toolbar button.rbc-active,
+.student-calendar .rbc-toolbar button.rbc-active:hover,
+.student-calendar .rbc-toolbar button.rbc-active:focus {
+  background: var(--dj-primary, #6d5acf);
+  border-color: var(--dj-primary, #6d5acf);
+  color: #fff;
+}
+
+.student-calendar .rbc-toolbar-label {
+  font-weight: 700;
+  color: var(--dj-primary, #6d5acf);
+}
+
+/* Highlight today and current-position accents in brand purple. */
+.student-calendar .rbc-today {
+  background: var(--dj-primary-soft, #e0d4ff);
+}
+
+.student-calendar .rbc-current-time-indicator {
+  background: var(--dj-primary, #6d5acf);
+}
+
+.student-calendar .rbc-off-range-bg {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.student-calendar .rbc-header {
+  padding: 8px 4px;
+  font-weight: 600;
+  color: var(--dj-text, #1f2937);
+}
+
+.student-calendar .rbc-event {
+  padding: 2px 6px;
+}
+
+/* Keep the calendar readable on small screens (horizontal scroll if needed). */
+@media (max-width: 575px) {
+  .student-calendar .rbc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+}

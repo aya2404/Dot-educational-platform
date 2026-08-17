@@ -2,11 +2,13 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   BsBoxArrowRight,
+  BsCalendarWeek,
   BsGraphUpArrow,
   BsHouseDoor,
   BsPlusSquare,
   BsShieldCheck,
   BsStars,
+  BsStickies,
   BsXLg,
 } from 'react-icons/bs';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +20,8 @@ import './Sidebar.css';
 const NAV_LINKS = {
   student: [
     { path: '/student', label: 'لوحة التحكم', icon: BsHouseDoor },
+    { path: '/student/calendar', label: 'التقويم', icon: BsCalendarWeek },
+    { path: '/student/notes', label: 'ملاحظاتي', icon: BsStickies },
     { path: '/pricing', label: 'الاشتراك', icon: BsStars },
   ],
   teacher: [
