@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BsArrowLeft,
+  BsAward,
   BsBarChartLineFill,
   BsBookHalf,
   BsCalendarWeek,
   BsCheck2Circle,
   BsClockHistory,
+  BsDownload,
   BsSend,
 } from 'react-icons/bs';
 import { useAuth } from '../context/AuthContext';
@@ -138,6 +140,36 @@ const StudentDashboard = () => {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
+  const [certBusyCourse, setCertBusyCourse] = useState('');
+  const [certMessage, setCertMessage] = useState({ type: '', text: '' });
+
+  const handleGetCertificate = async (courseId) => {
+    setCertBusyCourse(courseId);
+    setCertMessage({ type: '', text: '' });
+    try {
+      // Generate (idempotent) then download the PDF for the caller's own cert.
+      const created = await api.post('/certificates', { courseId });
+      const certificate = created.data.data;
+      const pdf = await api.get(`/certificates/${certificate._id}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(pdf.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${certificate.certificateId || 'certificate'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setCertMessage({ type: 'success', text: 'تم تنزيل الشهادة' });
+    } catch (requestError) {
+      setCertMessage({
+        type: 'danger',
+        text: requestError.response?.data?.message || 'تعذر إصدار الشهادة',
+      });
+    } finally {
+      setCertBusyCourse('');
+    }
+  };
+
   useEffect(() => {
     const fetchEnrollments = async () => {
       try {
@@ -253,6 +285,44 @@ const StudentDashboard = () => {
                 <h3 style={{ fontSize: '0.95rem' }}>نشاط التسليمات (آخر 7 أيام)</h3>
                 <ActivityLine data={stats.recentActivity} />
               </div>
+            </div>
+          )}
+        </section>
+
+        <section className="surface-card">
+          <div className="section-heading">
+            <div>
+              <h2 className="section-heading__title">شهاداتي</h2>
+            </div>
+          </div>
+
+          {certMessage.text ? (
+            <div className={`alert alert-${certMessage.type}`}>{certMessage.text}</div>
+          ) : null}
+
+          {enrollments.length === 0 ? (
+            <div className="empty-panel compact">
+              <h3>سجّل في كورس واحصل على شهادة عند إتمامه</h3>
+            </div>
+          ) : (
+            <div className="d-flex flex-column gap-2">
+              {enrollments.map((enrollment) => (
+                <div key={enrollment._id} className="stack-list__item static">
+                  <div className="d-flex align-items-center gap-2">
+                    <BsAward size={18} />
+                    <strong>{enrollment.course?.name}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => handleGetCertificate(enrollment.course?._id)}
+                    disabled={certBusyCourse === enrollment.course?._id}
+                  >
+                    <BsDownload size={14} />
+                    {certBusyCourse === enrollment.course?._id ? 'جارٍ الإصدار...' : 'تحميل الشهادة'}
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </section>

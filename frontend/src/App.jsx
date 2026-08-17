@@ -19,6 +19,8 @@ const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 const CoursePage = lazy(() => import('./pages/CoursePage'));
 const CreateContentPage = lazy(() => import('./pages/CreateContentPage'));
 const ExecutiveDashboard = lazy(() => import('./pages/ExecutiveDashboard'));
+const CertificateVerify = lazy(() => import('./pages/CertificateVerify'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
 
 const SessionRedirect = () => {
   const { user, loading } = useAuth();
@@ -47,6 +49,7 @@ const GuestRoute = ({ children }) => {
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<SessionRedirect />} />
+    <Route path="/certificates/verify/:certificateId" element={<CertificateVerify />} />
     <Route
       path="/login"
       element={
@@ -172,6 +175,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute roles={['admin', 'superadmin']}>
           <ExecutiveDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/pricing"
+      element={
+        <ProtectedRoute>
+          <PricingPage />
         </ProtectedRoute>
       }
     />

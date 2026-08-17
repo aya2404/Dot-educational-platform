@@ -6,6 +6,7 @@ import {
   BsHouseDoor,
   BsPlusSquare,
   BsShieldCheck,
+  BsStars,
   BsXLg,
 } from 'react-icons/bs';
 import { useAuth } from '../../context/AuthContext';
@@ -15,10 +16,14 @@ import NotificationBell from './NotificationBell';
 import './Sidebar.css';
 
 const NAV_LINKS = {
-  student: [{ path: '/student', label: 'لوحة التحكم', icon: BsHouseDoor }],
+  student: [
+    { path: '/student', label: 'لوحة التحكم', icon: BsHouseDoor },
+    { path: '/pricing', label: 'الاشتراك', icon: BsStars },
+  ],
   teacher: [
     { path: '/teacher', label: 'لوحة التحكم', icon: BsHouseDoor },
     { path: '/teacher/content/new', label: 'إضافة محتوى', icon: BsPlusSquare },
+    { path: '/pricing', label: 'الاشتراك', icon: BsStars },
   ],
   admin: [
     { path: '/admin', label: 'لوحة الإدارة', icon: BsShieldCheck },

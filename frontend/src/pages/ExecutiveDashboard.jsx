@@ -22,8 +22,9 @@ import Loader from '../components/common/Loader';
 import StatsCard from '../components/common/StatsCard';
 import api from '../utils/api';
 
-const PRIMARY = '#203f9a';
-const SECONDARY = '#b5507b';
+// Use the theme CSS variables so charts respect white-label branding.
+const PRIMARY = 'var(--dj-primary)';
+const SECONDARY = 'var(--dj-secondary)';
 
 const ChartCard = ({ title, children }) => (
   <section className="surface-card h-100">
@@ -114,9 +115,9 @@ const ExecutiveDashboard = () => {
             <div className="row g-4">
               <div className="col-12 col-xl-6">
                 <ChartCard title="أعلى 5 كورسات (حسب التسجيل)">
-                  <BarChart data={data.topCourses}>
+                  <BarChart data={data.topCourses} margin={{ bottom: 24 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(32,63,154,0.1)" />
-                    <XAxis dataKey="course" tick={{ fontSize: 11 }} interval={0} />
+                    <XAxis dataKey="course" tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={56} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                     <Tooltip />
                     <Bar dataKey="students" name="الطلاب" fill={PRIMARY} radius={[6, 6, 0, 0]} />
@@ -138,9 +139,9 @@ const ExecutiveDashboard = () => {
 
               <div className="col-12 col-xl-6">
                 <ChartCard title="أداء المدرسين (طلاب لكل مدرس)">
-                  <BarChart data={data.teacherPerformance}>
+                  <BarChart data={data.teacherPerformance} margin={{ bottom: 24 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(32,63,154,0.1)" />
-                    <XAxis dataKey="teacher" tick={{ fontSize: 10 }} interval={0} />
+                    <XAxis dataKey="teacher" tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={56} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                     <Tooltip />
                     <Bar dataKey="students" name="الطلاب" fill={SECONDARY} radius={[6, 6, 0, 0]} />

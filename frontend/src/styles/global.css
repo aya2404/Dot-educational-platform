@@ -2,8 +2,8 @@
    preconnected <link> in public/index.html — no render-blocking @import here. */
 
 :root {
-  --dj-primary: #203f9a;
-  --dj-primary-soft: #bdcfff;
+  --dj-primary: #6d5acf;
+  --dj-primary-soft: #e0d4ff;
   /* White-label brand colors (overridden at runtime by ThemeContext). */
   --dj-secondary: #ff6b6b;
   --dj-secondary-soft: #b8c0ff;

@@ -21,7 +21,7 @@
 .deadlines-group.is-overdue .deadlines-group__label { color: #b42318; background: #fde7e4; }
 .deadlines-group.is-today .deadlines-group__label { color: #b45309; background: #fef3c7; }
 .deadlines-group.is-soon .deadlines-group__label { color: #6b2fb3; background: #f0e5ff; }
-.deadlines-group.is-week .deadlines-group__label { color: #203f9a; background: #e2e8ff; }
+.deadlines-group.is-week .deadlines-group__label { color: var(--dj-primary); background: #e2e8ff; }
 .deadlines-group.is-later .deadlines-group__label { color: #475467; background: #eef0f4; }
 
 .deadlines-list {

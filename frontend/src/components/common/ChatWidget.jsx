@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BsArrowRight, BsChatDotsFill, BsSend, BsXLg } from 'react-icons/bs';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
+import Loader from './Loader';
 import './ChatWidget.css';
 
 // Floating course-page chat widget. REST + 5s polling (no realtime dependency),
@@ -175,9 +176,9 @@ const ChatWidget = ({ course }) => {
               ) : null}
 
               {loadingChats ? (
-                <p className="text-muted text-center mb-0">جارٍ التحميل...</p>
+                <div className="text-center"><Loader variant="inline" /></div>
               ) : chats.length === 0 ? (
-                <p className="text-muted text-center mb-0">لا توجد محادثات بعد</p>
+                <p className="text-muted text-center mb-0">لا توجد محادثات بعد. ابدأ محادثة من صفحة الكورس.</p>
               ) : (
                 <div className="d-flex flex-column gap-2">
                   {chats.map((chat) => (

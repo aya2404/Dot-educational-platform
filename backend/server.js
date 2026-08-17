@@ -17,6 +17,8 @@ const notificationRoutes = require('./routes/notifications');
 const chatRoutes = require('./routes/chat');
 const organizationRoutes = require('./routes/organizations');
 const analyticsRoutes = require('./routes/analytics');
+const certificateRoutes = require('./routes/certificates');
+const paymentRoutes = require('./routes/payments');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
@@ -47,7 +49,13 @@ app.use(
     },
   })
 );
-app.use(express.json({ limit: '2mb' }));
+// The Stripe webhook needs the untouched raw body for signature verification,
+// so JSON parsing is skipped for that exact path (routes/payments.js applies
+// express.raw there instead).
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/payments/webhook') return next();
+  return express.json({ limit: '2mb' })(req, res, next);
+});
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 app.use('/api/auth', authRoutes);
@@ -61,6 +69,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/certificates', certificateRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use(
   '/uploads',
   express.static(path.join(__dirname, 'uploads'), {
