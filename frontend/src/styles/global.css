@@ -727,17 +727,35 @@ a {
 /* ===========================DARK MODE ===================================== */
 /* Brand primary/secondary stay constant; surfaces, text, and borders invert. */
 :root[data-theme='dark'] {
-  --dj-background: #0f1120;
+  --dj-background: #0a0b1a;
   --dj-card: #1a1d33;
   --dj-primary-soft: #2a2650;
-  --dj-border: rgba(255, 255, 255, 0.10);
-  --dj-border-strong: rgba(255, 255, 255, 0.20);
-  --dj-text: #e8eaf2;
-  --dj-text-muted: rgba(232, 234, 242, 0.72);
-  --dj-text-soft: rgba(232, 234, 242, 0.56);
-  --dj-text-faint: rgba(232, 234, 242, 0.42);
-  --dj-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-  --dj-shadow-soft: 0 14px 36px rgba(0, 0, 0, 0.4);
+  --dj-border: rgba(255, 255, 255, 0.12);
+  --dj-border-strong: rgba(255, 255, 255, 0.24);
+  --dj-text: #f0f2f8;
+  --dj-text-muted: rgba(240, 242, 248, 0.74);
+  --dj-text-soft: rgba(240, 242, 248, 0.58);
+  --dj-text-faint: rgba(240, 242, 248, 0.44);
+  --dj-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --dj-shadow-soft: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+/* Give cards a clear edge against the darker background. */
+:root[data-theme='dark'] .surface-card,
+:root[data-theme='dark'] .metric-card,
+:root[data-theme='dark'] .notif-panel {
+  background: var(--dj-card);
+  border: 1px solid var(--dj-border);
+}
+
+/* Make primary buttons pop with a subtle purple glow. */
+:root[data-theme='dark'] .btn-primary {
+  box-shadow: 0 6px 18px rgba(109, 90, 207, 0.45);
+}
+
+/* Keep the notification badge / pills readable on dark surfaces. */
+:root[data-theme='dark'] .badge.bg-secondary {
+  background-color: #3a3f5c !important;
 }
 
 :root[data-theme='dark'] body {
@@ -896,4 +914,29 @@ a {
 
 .sidebar-legal a:hover {
   color: var(--dj-primary);
+}
+
+/* ===========================RESPONSIVE SAFETY NET ======================== */
+/* Never allow the page body to scroll horizontally; images/media scale down. */
+body {
+  overflow-x: hidden;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Long unbreakable strings (URLs, IDs) wrap instead of forcing overflow. */
+.surface-card,
+.app-page {
+  max-width: 100%;
+}
+
+/* On small screens keep note cards full-width and tables scrollable. */
+@media (max-width: 575px) {
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
 }

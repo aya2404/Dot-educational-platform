@@ -17,6 +17,7 @@ const GlobalSettingsPage = () => {
   const [form, setForm] = useState(EMPTY);
   const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
@@ -45,6 +46,26 @@ const GlobalSettingsPage = () => {
   }, []);
 
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+
+  // Upload an image file via the existing hardened /uploads endpoint (rate-limited,
+  // MIME/extension-filtered; SVG is intentionally rejected) and store the URL.
+  const uploadImage = async (field, file) => {
+    if (!file) return;
+    setUploading(field);
+    setMessage({ type: '', text: '' });
+    try {
+      const data = new FormData();
+      data.append('files', file);
+      const response = await api.post('/uploads', data);
+      const url = response.data.data?.[0]?.url;
+      if (url) update(field, url);
+      else setMessage({ type: 'danger', text: 'تعذر رفع الملف' });
+    } catch (requestError) {
+      setMessage({ type: 'danger', text: requestError.response?.data?.message || 'تعذر رفع الملف' });
+    } finally {
+      setUploading('');
+    }
+  };
 
   const handleSave = async (event) => {
     event.preventDefault();
@@ -123,27 +144,61 @@ const GlobalSettingsPage = () => {
               </div>
 
               <div>
-                <label className="form-label" htmlFor="global-logo">رابط الشعار العام (يظهر في صفحة الدخول)</label>
+                <label className="form-label" htmlFor="global-logo">الشعار العام (يظهر في صفحة الدخول)</label>
+                {form.logoUrl ? (
+                  <div className="mb-2">
+                    <img
+                      src={form.logoUrl}
+                      alt="معاينة الشعار"
+                      style={{ maxHeight: 64, maxWidth: '100%', borderRadius: 8, background: '#fff', padding: 4 }}
+                    />
+                  </div>
+                ) : null}
                 <input
                   id="global-logo"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
                   className="form-control"
-                  placeholder="https://... أو /uploads/..."
+                  onChange={(event) => uploadImage('logoUrl', event.target.files?.[0])}
+                  disabled={saving || uploading === 'logoUrl'}
+                />
+                <input
+                  className="form-control mt-2"
+                  placeholder="أو الصق رابطاً: https://... أو /uploads/..."
                   value={form.logoUrl}
                   onChange={(event) => update('logoUrl', event.target.value)}
                   disabled={saving}
                 />
+                {uploading === 'logoUrl' ? <span className="text-muted small">جارٍ الرفع...</span> : null}
               </div>
 
               <div>
-                <label className="form-label" htmlFor="global-favicon">رابط أيقونة الموقع (Favicon)</label>
+                <label className="form-label" htmlFor="global-favicon">أيقونة الموقع (Favicon)</label>
+                {form.faviconUrl ? (
+                  <div className="mb-2">
+                    <img
+                      src={form.faviconUrl}
+                      alt="معاينة الأيقونة"
+                      style={{ height: 32, width: 32, borderRadius: 6, background: '#fff', padding: 2 }}
+                    />
+                  </div>
+                ) : null}
                 <input
                   id="global-favicon"
+                  type="file"
+                  accept="image/png,image/x-icon,image/webp"
                   className="form-control"
-                  placeholder="https://... أو /uploads/..."
+                  onChange={(event) => uploadImage('faviconUrl', event.target.files?.[0])}
+                  disabled={saving || uploading === 'faviconUrl'}
+                />
+                <input
+                  className="form-control mt-2"
+                  placeholder="أو الصق رابطاً: https://... أو /uploads/..."
                   value={form.faviconUrl}
                   onChange={(event) => update('faviconUrl', event.target.value)}
                   disabled={saving}
                 />
+                {uploading === 'faviconUrl' ? <span className="text-muted small">جارٍ الرفع...</span> : null}
               </div>
 
               <button type="submit" className="btn btn-primary align-self-start" disabled={saving}>
