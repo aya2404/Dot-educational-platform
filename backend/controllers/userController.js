@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const User = require('../models/User');
 const { serializeUser } = require('../utils/serializers');
+const { sendEmail } = require('../utils/email');
 
 const PRIVILEGED_ROLES = new Set(['admin', 'superadmin']);
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
@@ -130,6 +131,17 @@ const createUser = async (req, res) => {
       role,
       tenantId,
     });
+
+    // Welcome email with sign-in credentials (additional channel). Fire-and-
+    // forget; only sends if the account has an email on file (see report note).
+    if (user.email) {
+      sendEmail({
+        to: user.email,
+        subject: 'مرحباً بك في المنصة',
+        html: `<p>مرحباً ${user.name},</p><p>تم إنشاء حسابك. معرّف الدخول: <strong>${user.studentId || user.username}</strong>.</p><p>يرجى تسجيل الدخول وتغيير كلمة المرور.</p>`,
+        text: `تم إنشاء حسابك. معرّف الدخول: ${user.studentId || user.username}.`,
+      });
+    }
 
     return res.status(201).json({
       success: true,

@@ -9,6 +9,7 @@ const { getSubmissionPermissions, isSubmissionWindowOpen, userHasManagerPrivileg
 const { serializeSubmission } = require('../utils/serializers');
 const { notify } = require('../utils/notifications');
 const { triggerActivity } = require('../utils/gamification');
+const { sendEmail } = require('../utils/email');
 
 const getSafeAnswer = (answer) => (typeof answer === 'string' ? answer.trim() : '');
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
@@ -246,6 +247,18 @@ const gradeSubmission = async (req, res) => {
     // badge). Grading time is the only point the grade exists. Fire-and-forget.
     if (maxScore > 0 && grade >= maxScore) {
       triggerActivity(submission.student?._id || submission.student, 'perfect_score');
+    }
+
+    // Additional email channel (alongside the in-app notification). Fire-and-
+    // forget; only sends if the student has an email on file (see report note).
+    const studentEmail = submission.student?.email;
+    if (studentEmail) {
+      sendEmail({
+        to: studentEmail,
+        subject: 'تم تقييم تسليمك',
+        html: `<p>مرحباً ${submission.student?.name || ''}،</p><p>تم تقييم تسليمك في «${task.title}»: <strong>${grade} من ${maxScore}</strong>.</p>`,
+        text: `تم تقييم تسليمك في «${task.title}»: ${grade} من ${maxScore}.`,
+      });
     }
 
     return res.json({

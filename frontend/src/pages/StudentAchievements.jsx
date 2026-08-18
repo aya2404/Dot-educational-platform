@@ -3,6 +3,7 @@ import * as FaIcons from 'react-icons/fa';
 import { BsLockFill, BsStars } from 'react-icons/bs';
 import AppLayout from '../components/common/AppLayout';
 import Loader from '../components/common/Loader';
+import EmptyState from '../components/common/EmptyState';
 import api from '../utils/api';
 import './StudentAchievements.css';
 
@@ -96,9 +97,11 @@ const StudentAchievements = () => {
               </div>
 
               {available.length === 0 ? (
-                <div className="empty-panel compact">
-                  <h3>لا توجد شارات معرّفة بعد</h3>
-                </div>
+                <EmptyState
+                  emoji="🏅"
+                  title="لم تحصل على أي شارة بعد"
+                  message="تفاعل مع الكورسات وأكمل مهامك لكسب الشارات!"
+                />
               ) : (
                 <div className="badge-grid">
                   {available.map((badge) => {

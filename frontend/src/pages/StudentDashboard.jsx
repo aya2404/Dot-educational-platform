@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
 import Loader from '../components/common/Loader';
+import EmptyState from '../components/common/EmptyState';
 import UpcomingDeadlines from '../components/student/UpcomingDeadlines';
 import api from '../utils/api';
 
@@ -110,6 +111,15 @@ const StudentDashboard = () => {
   const [certBusyCourse, setCertBusyCourse] = useState('');
   const [certMessage, setCertMessage] = useState({ type: '', text: '' });
 
+  // First-time onboarding banner (dismissed permanently via localStorage).
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !localStorage.getItem('hasSeenOnboarding')
+  );
+  const dismissOnboarding = () => {
+    localStorage.setItem('hasSeenOnboarding', '1');
+    setShowOnboarding(false);
+  };
+
   const handleGetCertificate = async (courseId) => {
     setCertBusyCourse(courseId);
     setCertMessage({ type: '', text: '' });
@@ -181,6 +191,47 @@ const StudentDashboard = () => {
             <strong>{user?.studentId}</strong>
           </div>
         </section>
+
+        {showOnboarding && !isLoading && enrollments.length === 0 ? (
+          <section className="surface-card onboarding-banner">
+            <button
+              type="button"
+              className="onboarding-banner__close"
+              onClick={dismissOnboarding}
+              aria-label="إغلاق"
+            >
+              ×
+            </button>
+            <h2 className="onboarding-banner__title">👋 مرحباً بك في منصتك التعليمية!</h2>
+            <p className="onboarding-banner__text">
+              يمكنك البدء باستعراض الكورسات المتاحة، أو استخدام التقويم لتنظيم وقتك، وتدوين ملاحظاتك،
+              والتواصل عبر الدردشة داخل الكورسات.
+            </p>
+            <div className="onboarding-banner__actions">
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => navigate('/student/calendar')}
+              >
+                📅 التقويم
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => navigate('/student/notes')}
+              >
+                📝 ملاحظاتي
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => navigate('/student/achievements')}
+              >
+                🏅 إنجازاتي
+              </button>
+            </div>
+          </section>
+        ) : null}
 
         <section className="metric-grid">
           <article className="metric-card">
@@ -304,9 +355,11 @@ const StudentDashboard = () => {
           {!isLoading && error ? <div className="alert alert-danger mb-0">{error}</div> : null}
 
           {!isLoading && !error && enrollments.length === 0 ? (
-            <div className="empty-panel">
-              <h3>لا توجد كورسات مسجلة حالياً</h3>
-            </div>
+            <EmptyState
+              emoji="📚"
+              title="لم تسجل في أي كورس بعد"
+              message="ابدأ رحلتك التعليمية الآن! سيظهر هنا كل كورس تُسجَّل فيه."
+            />
           ) : null}
 
           {!isLoading && !error && enrollments.length > 0 ? (

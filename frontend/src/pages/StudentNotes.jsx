@@ -8,6 +8,7 @@ import {
 } from 'react-icons/bs';
 import AppLayout from '../components/common/AppLayout';
 import ConfirmModal from '../components/common/ConfirmModal';
+import EmptyState from '../components/common/EmptyState';
 import Loader from '../components/common/Loader';
 import api from '../utils/api';
 import './StudentNotes.css';
@@ -20,6 +21,19 @@ const PALETTE = [
   { name: 'أخضر', value: '#bbf7d0' },
   { name: 'بنفسجي', value: '#ddd6fe' },
 ];
+
+// Readable text colour for a given note background: dark text on light colours,
+// white text on dark ones (perceived-luminance threshold).
+const getContrastText = (hex) => {
+  if (!hex) return '#1f2937';
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance > 0.6 ? '#1f2937' : '#ffffff';
+};
 
 // Pinned first, then manual order, then newest — same ordering the API returns.
 const sortNotes = (list) =>
@@ -164,14 +178,13 @@ const StudentNotes = () => {
         ) : error ? (
           <div className="alert alert-danger">{error}</div>
         ) : notes.length === 0 ? (
-          <div className="empty-panel">
-            <h3>ابدأ بتدوين أفكارك!</h3>
-            <p className="text-muted">أنشئ ملاحظاتك، لوّنها، ثبّتها، ونظّمها كما تحب.</p>
-            <button type="button" className="btn btn-primary" onClick={handleAddNote} disabled={adding}>
-              <BsPlusLg size={16} />
-              إضافة ملاحظة
-            </button>
-          </div>
+          <EmptyState
+            emoji="📝"
+            title="لا توجد ملاحظات"
+            message="دوّن أفكارك لتتذكرها لاحقاً! أنشئ ملاحظاتك، لوّنها، ثبّتها، ونظّمها كما تحب."
+            actionText="إضافة ملاحظة"
+            onAction={handleAddNote}
+          />
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="notes-board" direction="horizontal">
@@ -182,7 +195,11 @@ const StudentNotes = () => {
                       {(dragProvided, snapshot) => (
                         <article
                           className={`note-card ${snapshot.isDragging ? 'is-dragging' : ''}`}
-                          style={{ backgroundColor: note.color, ...dragProvided.draggableProps.style }}
+                          style={{
+                            ...dragProvided.draggableProps.style,
+                            backgroundColor: note.color,
+                            color: getContrastText(note.color),
+                          }}
                           ref={dragProvided.innerRef}
                           {...dragProvided.draggableProps}
                         >

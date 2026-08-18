@@ -22,6 +22,9 @@ const StudentCalendar = lazy(() => import('./pages/StudentCalendar'));
 const StudentNotes = lazy(() => import('./pages/StudentNotes'));
 const StudentAchievements = lazy(() => import('./pages/StudentAchievements'));
 const GlobalSettingsPage = lazy(() => import('./pages/GlobalSettingsPage'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const ExecutiveDashboard = lazy(() => import('./pages/ExecutiveDashboard'));
 const CertificateVerify = lazy(() => import('./pages/CertificateVerify'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
@@ -54,6 +57,8 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<SessionRedirect />} />
     <Route path="/certificates/verify/:certificateId" element={<CertificateVerify />} />
+    <Route path="/privacy" element={<PrivacyPolicy />} />
+    <Route path="/terms" element={<TermsOfService />} />
     <Route
       path="/login"
       element={
@@ -222,7 +227,7 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
-    <Route path="*" element={<SessionRedirect />} />
+    <Route path="*" element={<NotFoundPage />} />
   </Routes>
 );
 

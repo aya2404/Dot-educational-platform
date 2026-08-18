@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BsBell, BsBellFill, BsCheck2All } from 'react-icons/bs';
 import api from '../../utils/api';
 import Loader from './Loader';
+import EmptyState from './EmptyState';
 import { formatArabicDate } from '../../utils/contentTypes';
 import './NotificationBell.css';
 
@@ -157,7 +158,7 @@ const NotificationBell = ({ onNavigate }) => {
             ) : error ? (
               <div className="alert alert-danger mb-0">{error}</div>
             ) : items.length === 0 ? (
-              <div className="notif-panel__empty">لا توجد إشعارات</div>
+              <EmptyState emoji="🔔" title="لا توجد إشعارات" message="ستظهر هنا التنبيهات الجديدة." />
             ) : (
               <ul className="notif-list">
                 {items.map((item) => (

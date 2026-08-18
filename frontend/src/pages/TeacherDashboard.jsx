@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
 import ConfirmModal from '../components/common/ConfirmModal';
 import Loader from '../components/common/Loader';
+import EmptyState from '../components/common/EmptyState';
 import api from '../utils/api';
 import { getCreateContentPath, getRoleCoursePath } from '../utils/auth';
 
@@ -263,9 +264,13 @@ const TeacherDashboard = () => {
 
         {!isLoading && !error && courses.length === 0 ? (
           <div className="surface-card">
-            <div className="empty-panel">
-              <h3>لا توجد كورسات مرتبطة بحسابك حالياً</h3>
-            </div>
+            <EmptyState
+              emoji="📘"
+              title="لا توجد كورسات مرتبطة بحسابك"
+              message="أنشئ كورسك الأول لتبدأ بإضافة المحتوى وتسجيل الطلاب."
+              actionText="إنشاء كورس"
+              onAction={() => setShowCreateForm(true)}
+            />
           </div>
         ) : null}
 

@@ -24,6 +24,15 @@ export const ThemeProvider = ({ children }) => {
   const [settings, setSettings] = useState(null); // tenant settings
   const [globalSettings, setGlobalSettings] = useState(null);
 
+  // Light/dark mode — persisted in localStorage, applied via a data-theme
+  // attribute on <html> that global.css keys its dark-mode variables off.
+  const [mode, setMode] = useState(() => localStorage.getItem('theme') || 'light');
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', mode);
+    localStorage.setItem('theme', mode);
+  }, [mode]);
+  const toggleMode = useCallback(() => setMode((m) => (m === 'dark' ? 'light' : 'dark')), []);
+
   // Re-apply the merged theme (tenant over global) to the CSS variables, title,
   // and favicon. Called whenever either layer changes.
   const applyMerged = useCallback((tenant, global) => {
@@ -89,6 +98,8 @@ export const ThemeProvider = ({ children }) => {
         refreshSettings: refreshTheme,
         refreshGlobal,
         applyTheme,
+        mode,
+        toggleMode,
       }}
     >
       {children}

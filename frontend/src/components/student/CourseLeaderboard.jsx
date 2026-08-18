@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BsTrophyFill } from 'react-icons/bs';
 import Loader from '../common/Loader';
+import EmptyState from '../common/EmptyState';
 import api from '../../utils/api';
 import './CourseLeaderboard.css';
 
@@ -48,7 +49,7 @@ const CourseLeaderboard = ({ courseId }) => {
       ) : error ? (
         <div className="alert alert-danger mb-0">{error}</div>
       ) : rows.length === 0 ? (
-        <p className="text-muted mb-0">لا يوجد طلاب في هذا الكورس بعد.</p>
+        <EmptyState emoji="🏆" title="لا يوجد متصدرون بعد" message="سيظهر ترتيب الطلاب هنا فور انضمامهم وكسبهم للنقاط." />
       ) : (
         <ol className="leaderboard-list">
           {rows.map((row) => (
