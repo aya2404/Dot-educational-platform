@@ -14,15 +14,55 @@ const NotificationBell = ({ onNavigate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const mounted = useRef(true);
+  const prevUnread = useRef(0); // last-known count, kept in sync below
+  const firstLoad = useRef(true); // suppress the beep on the very first fetch
+  const audioCtxRef = useRef(null);
+
+  // Subtle Web Audio "chime" (sine blip) — no asset/dependency. Silently no-ops
+  // if the browser blocks audio (e.g. before any user gesture).
+  const playBeep = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 660;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.14, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.26);
+    } catch {
+      /* audio blocked/unsupported — ignore */
+    }
+  };
 
   const fetchUnread = async () => {
     try {
       const response = await api.get('/notifications/unread-count');
-      if (mounted.current) setUnreadCount(response.data.unreadCount || 0);
+      if (!mounted.current) return;
+      const next = response.data.unreadCount || 0;
+      // Beep once per increment (a batch that raises the count fires a single
+      // chime), never on the initial load.
+      if (!firstLoad.current && next > prevUnread.current) playBeep();
+      firstLoad.current = false;
+      setUnreadCount(next);
     } catch {
       /* silent — the bell simply shows no badge on failure */
     }
   };
+
+  // Keep the baseline in sync with every count change (including mark-as-read),
+  // so a later increment is measured against the true current value.
+  useEffect(() => {
+    prevUnread.current = unreadCount;
+  }, [unreadCount]);
 
   useEffect(() => {
     mounted.current = true;

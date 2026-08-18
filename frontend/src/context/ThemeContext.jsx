@@ -2,42 +2,94 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import api from '../utils/api';
 import { useAuth } from './AuthContext';
 
-// Applies the tenant's white-label branding: primary/secondary colors are
-// written to the CSS custom properties the design system already reads
-// (--dj-primary is used app-wide), and the platform name becomes the document
-// title. Settings are fetched once the user is authenticated.
+// Applies branding across two layers:
+//   • GLOBAL (Super-Admin platform settings) — the site-wide fallback, and the
+//     owner of truly global elements: the favicon (always global) and the login-
+//     page logo / platform name.
+//   • TENANT (per-organization settings) — overrides the global colours/name/logo
+//     for a signed-in tenant's own experience.
+// Effective value = tenant ?? global. The favicon is always the global one.
 const ThemeContext = createContext(null);
 
-const applyTheme = (settings) => {
-  if (!settings) return;
-  const root = document.documentElement;
-  if (settings.primaryColor) root.style.setProperty('--dj-primary', settings.primaryColor);
-  if (settings.secondaryColor) root.style.setProperty('--dj-secondary', settings.secondaryColor);
-  if (settings.platformName) document.title = settings.platformName;
+// Point the (single) favicon <link> at a new href. index.html ships a
+// <link id="app-favicon"> we mutate here so the tab icon can be global-driven.
+const setFavicon = (href) => {
+  if (!href) return;
+  const link = document.getElementById('app-favicon');
+  if (link) link.href = href;
 };
 
 export const ThemeProvider = ({ children }) => {
   const { user } = useAuth();
-  const [settings, setSettings] = useState(null);
+  const [settings, setSettings] = useState(null); // tenant settings
+  const [globalSettings, setGlobalSettings] = useState(null);
 
+  // Re-apply the merged theme (tenant over global) to the CSS variables, title,
+  // and favicon. Called whenever either layer changes.
+  const applyMerged = useCallback((tenant, global) => {
+    const root = document.documentElement;
+    const primary = tenant?.primaryColor || global?.primaryColor;
+    const secondary = tenant?.secondaryColor || global?.secondaryColor;
+    const name = tenant?.platformName || global?.platformName;
+    if (primary) root.style.setProperty('--dj-primary', primary);
+    if (secondary) root.style.setProperty('--dj-secondary', secondary);
+    if (name) document.title = name;
+    setFavicon(global?.faviconUrl); // favicon is always the global one
+  }, []);
+
+  // Backwards-compatible single-arg applier (used by existing callers).
+  const applyTheme = useCallback(
+    (tenant) => applyMerged(tenant, globalSettings),
+    [applyMerged, globalSettings]
+  );
+
+  // GLOBAL settings are public — fetch once on mount (even pre-auth) so the login
+  // page gets the global logo/favicon/name.
+  const refreshGlobal = useCallback(async () => {
+    try {
+      const response = await api.get('/platform/settings');
+      setGlobalSettings(response.data.data);
+      return response.data.data;
+    } catch {
+      return null; // keep built-in defaults on failure
+    }
+  }, []);
+
+  // TENANT settings require auth.
   const refreshTheme = useCallback(async () => {
     try {
       const response = await api.get('/organizations/settings');
       setSettings(response.data.data);
-      applyTheme(response.data.data);
+      return response.data.data;
     } catch {
-      /* keep the built-in defaults on failure */
+      return null;
     }
   }, []);
 
-  // Load (and apply) branding whenever the user session changes.
+  useEffect(() => {
+    refreshGlobal();
+  }, [refreshGlobal]);
+
   useEffect(() => {
     if (user) refreshTheme();
+    else setSettings(null); // logged out -> fall back to global branding
   }, [user, refreshTheme]);
+
+  // Whenever either layer changes, re-apply the merged theme.
+  useEffect(() => {
+    applyMerged(settings, globalSettings);
+  }, [settings, globalSettings, applyMerged]);
 
   return (
     <ThemeContext.Provider
-      value={{ settings, refreshTheme, refreshSettings: refreshTheme, applyTheme }}
+      value={{
+        settings,
+        globalSettings,
+        refreshTheme,
+        refreshSettings: refreshTheme,
+        refreshGlobal,
+        applyTheme,
+      }}
     >
       {children}
     </ThemeContext.Provider>

@@ -5,6 +5,7 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const { resolveCourseAccess } = require('../utils/courseAccess');
 const { triggerActivity } = require('../utils/gamification');
+const { notifyMany } = require('../utils/notifications');
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -176,6 +177,19 @@ const sendMessage = async (req, res) => {
 
     // Bump the chat so it surfaces to the top of participants' lists.
     await Chat.updateOne({ _id: chat._id }, { $set: { updatedAt: new Date() } });
+
+    // Privacy: alert the OTHER participants that *something* arrived — never the
+    // sender's name or the message text. The red badge increments; users must
+    // open the chat to see who sent what. Fire-and-forget (notifyMany never throws).
+    const recipients = chat.participants.filter(
+      (participant) => participant.toString() !== req.user._id.toString()
+    );
+    notifyMany(recipients, {
+      type: 'CHAT_MESSAGE',
+      title: 'دردشة',
+      message: 'رسالة جديدة في الدردشة',
+      tenantId: chat.tenantId,
+    });
 
     // Gamification: reward students for participating in course chat. Fire-and-
     // forget and student-only (staff messages don't earn XP).

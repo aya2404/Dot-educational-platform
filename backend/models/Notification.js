@@ -8,6 +8,7 @@ const NOTIFICATION_TYPES = [
   'COURSE_ANNOUNCEMENT',
   'SUBMISSION_GRADED',
   'BADGE_AWARDED',
+  'CHAT_MESSAGE',
 ];
 
 const notificationSchema = new mongoose.Schema(

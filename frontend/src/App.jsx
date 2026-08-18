@@ -21,6 +21,7 @@ const CreateContentPage = lazy(() => import('./pages/CreateContentPage'));
 const StudentCalendar = lazy(() => import('./pages/StudentCalendar'));
 const StudentNotes = lazy(() => import('./pages/StudentNotes'));
 const StudentAchievements = lazy(() => import('./pages/StudentAchievements'));
+const GlobalSettingsPage = lazy(() => import('./pages/GlobalSettingsPage'));
 const ExecutiveDashboard = lazy(() => import('./pages/ExecutiveDashboard'));
 const CertificateVerify = lazy(() => import('./pages/CertificateVerify'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
@@ -170,6 +171,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute roles={['superadmin']}>
           <SuperAdminDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/superadmin/global-settings"
+      element={
+        <ProtectedRoute roles={['superadmin']}>
+          <GlobalSettingsPage />
         </ProtectedRoute>
       }
     />

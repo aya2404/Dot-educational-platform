@@ -22,6 +22,7 @@ const paymentRoutes = require('./routes/payments');
 const calendarRoutes = require('./routes/calendar');
 const noteRoutes = require('./routes/notes');
 const gamificationRoutes = require('./routes/gamification');
+const platformRoutes = require('./routes/platform');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
@@ -77,6 +78,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/gamification', gamificationRoutes);
+app.use('/api/platform', platformRoutes);
 app.use(
   '/uploads',
   express.static(path.join(__dirname, 'uploads'), {

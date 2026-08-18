@@ -7,6 +7,7 @@ import {
   BsHouseDoor,
   BsPlusSquare,
   BsShieldCheck,
+  BsSliders,
   BsStars,
   BsStickies,
   BsTrophy,
@@ -40,6 +41,7 @@ const NAV_LINKS = {
     { path: '/superadmin', label: 'لوحة الإدارة', icon: BsShieldCheck },
     { path: '/executive-dashboard', label: 'المؤشرات', icon: BsGraphUpArrow },
     { path: '/superadmin/content/new', label: 'إضافة محتوى', icon: BsPlusSquare },
+    { path: '/superadmin/global-settings', label: 'الإعدادات العامة', icon: BsSliders },
   ],
 };
 

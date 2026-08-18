@@ -89,6 +89,13 @@ const enrollStudent = async (req, res) => {
       return res.status(access.statusCode).json({ success: false, message: access.message });
     }
 
+    // Multi-tenancy: an Organization Admin may only enroll into courses within
+    // their own tenant (teachers are already ownership-scoped; Super Admin is
+    // unrestricted). Respond as not-found to avoid cross-tenant disclosure.
+    if (req.user.role === 'admin' && access.course.tenantId !== (req.tenantId || 'default')) {
+      return res.status(404).json({ success: false, message: 'الكورس غير موجود' });
+    }
+
     // Multi-tenancy: the enrollment inherits the acting manager/teacher's tenant
     // (req.tenantId, set by `protect`); fall back to 'default' (and warn) only
     // if it is somehow absent.

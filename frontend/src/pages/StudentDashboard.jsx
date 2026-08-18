@@ -96,39 +96,6 @@ const GradeBars = ({ data }) => {
   );
 };
 
-const ActivityLine = ({ data }) => {
-  if (!data || data.length === 0) {
-    return <p className="text-muted mb-0">لا يوجد نشاط</p>;
-  }
-  const width = 300;
-  const height = 130;
-  const pad = 22;
-  const max = Math.max(1, ...data.map((d) => d.count));
-  const step = (width - pad * 2) / Math.max(1, data.length - 1);
-  const point = (d, i) => {
-    const x = pad + i * step;
-    const y = height - pad - (d.count / max) * (height - pad * 2);
-    return { x, y };
-  };
-  const polyline = data.map((d, i) => { const { x, y } = point(d, i); return `${x},${y}`; }).join(' ');
-  return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="نشاط التسليمات آخر 7 أيام">
-      <polyline
-        fill="none"
-        stroke="var(--dj-primary)"
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        points={polyline}
-      />
-      {data.map((d, i) => {
-        const { x, y } = point(d, i);
-        return <circle key={d.date} cx={x} cy={y} r="3.5" fill="var(--dj-primary)" />;
-      })}
-    </svg>
-  );
-};
-
 const StudentDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -280,10 +247,6 @@ const StudentDashboard = () => {
               <div className="col-12 col-md-8">
                 <h3 style={{ fontSize: '0.95rem' }}>الدرجات حسب الكورس</h3>
                 <GradeBars data={stats.gradeByCourse} />
-              </div>
-              <div className="col-12">
-                <h3 style={{ fontSize: '0.95rem' }}>نشاط التسليمات (آخر 7 أيام)</h3>
-                <ActivityLine data={stats.recentActivity} />
               </div>
             </div>
           )}
