@@ -4,6 +4,7 @@ const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const User = require('../models/User');
 const { resolveCourseAccess } = require('../utils/courseAccess');
+const { triggerActivity } = require('../utils/gamification');
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -175,6 +176,12 @@ const sendMessage = async (req, res) => {
 
     // Bump the chat so it surfaces to the top of participants' lists.
     await Chat.updateOne({ _id: chat._id }, { $set: { updatedAt: new Date() } });
+
+    // Gamification: reward students for participating in course chat. Fire-and-
+    // forget and student-only (staff messages don't earn XP).
+    if (req.user.role === 'student') {
+      triggerActivity(req.user._id, 'chat_message');
+    }
 
     await message.populate('sender', 'name role');
     return res.status(201).json({ success: true, data: message });

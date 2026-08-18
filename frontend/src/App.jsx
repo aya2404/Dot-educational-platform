@@ -20,6 +20,7 @@ const CoursePage = lazy(() => import('./pages/CoursePage'));
 const CreateContentPage = lazy(() => import('./pages/CreateContentPage'));
 const StudentCalendar = lazy(() => import('./pages/StudentCalendar'));
 const StudentNotes = lazy(() => import('./pages/StudentNotes'));
+const StudentAchievements = lazy(() => import('./pages/StudentAchievements'));
 const ExecutiveDashboard = lazy(() => import('./pages/ExecutiveDashboard'));
 const CertificateVerify = lazy(() => import('./pages/CertificateVerify'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
@@ -89,6 +90,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute roles={['student']}>
           <StudentNotes />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/student/achievements"
+      element={
+        <ProtectedRoute roles={['student']}>
+          <StudentAchievements />
         </ProtectedRoute>
       }
     />

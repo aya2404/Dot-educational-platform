@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
 const { serializeUser } = require('../utils/serializers');
+const { triggerActivity } = require('../utils/gamification');
 
 const STUDENT_ID_PATTERN = /^[A-Z]{3}-\d+$/;
 
@@ -59,6 +60,12 @@ const login = async (req, res) => {
 
     if (!user.isActive) {
       return invalidCredentials();
+    }
+
+    // Gamification: track daily-login streaks for students (idempotent per day).
+    // Fire-and-forget — never delays or breaks the login response.
+    if (user.role === 'student') {
+      triggerActivity(user._id, 'daily_login');
     }
 
     return res.json({

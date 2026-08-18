@@ -8,7 +8,27 @@ const Submission = require('../models/Submission');
 const { isSubmissionWindowOpen } = require('../utils/permissions');
 const { resolveCourseAccess } = require('../utils/courseAccess');
 const { notify } = require('../utils/notifications');
+const { triggerActivity } = require('../utils/gamification');
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
+
+// Non-blocking: after a student completes a lecture, detect whether every
+// published lecture in the course is now done and, if so, award course-completion
+// XP/badge. Never throws (fire-and-forget from the request path).
+const checkCourseCompletion = async (studentId, courseId, completedLectures) => {
+  const lectures = await Content.find({
+    course: courseId,
+    type: 'lecture',
+    isPublished: { $ne: false },
+  }).select('_id');
+
+  if (lectures.length === 0) return;
+
+  const done = new Set(completedLectures.map((id) => id.toString()));
+  const allComplete = lectures.every((lecture) => done.has(lecture._id.toString()));
+  if (allComplete) {
+    triggerActivity(studentId, 'course_complete');
+  }
+};
 
 const enrollStudent = async (req, res) => {
   try {
@@ -224,6 +244,16 @@ const markLectureComplete = async (req, res) => {
     }
 
     await enrollment.save();
+
+    // Gamification: award lecture-completion XP/badges only when a lecture was
+    // newly completed (not on un-complete), then check for full-course completion.
+    if (!alreadyCompleted) {
+      triggerActivity(req.user._id, 'lecture_complete');
+      checkCourseCompletion(req.user._id, courseId, enrollment.completedLectures).catch(
+        (gamificationError) =>
+          console.error('checkCourseCompletion error:', gamificationError.message)
+      );
+    }
 
     return res.json({
       success: true,

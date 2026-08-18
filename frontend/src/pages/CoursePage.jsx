@@ -17,6 +17,7 @@ import ConfirmModal from '../components/common/ConfirmModal';
 import Loader from '../components/common/Loader';
 import Timeline from '../components/student/Timeline';
 import CourseGradeSummary from '../components/student/CourseGradeSummary';
+import CourseLeaderboard from '../components/student/CourseLeaderboard';
 import CourseFormModal from '../components/teacher/CourseFormModal';
 import CourseRosterPanel from '../components/teacher/CourseRosterPanel';
 import GradebookModal from '../components/teacher/GradebookModal';
@@ -227,6 +228,8 @@ const CoursePage = () => {
             </section>
 
             {isStudent && <CourseGradeSummary courseId={courseId} />}
+
+            <CourseLeaderboard courseId={courseId} />
 
             {canManageContent && <CourseRosterPanel courseId={courseId} />}
 

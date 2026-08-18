@@ -8,6 +8,7 @@ const { resolveCourseAccess } = require('../utils/courseAccess');
 const { getSubmissionPermissions, isSubmissionWindowOpen, userHasManagerPrivileges } = require('../utils/permissions');
 const { serializeSubmission } = require('../utils/serializers');
 const { notify } = require('../utils/notifications');
+const { triggerActivity } = require('../utils/gamification');
 
 const getSafeAnswer = (answer) => (typeof answer === 'string' ? answer.trim() : '');
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
@@ -88,6 +89,10 @@ const submitTask = async (req, res) => {
     submission.isLate = submittedLate;
 
     await submission.save();
+
+    // Gamification: count the submission (+XP) and re-evaluate badges. Fire-and-
+    // forget — never blocks or fails the submission that was just saved.
+    triggerActivity(req.user._id, 'submission', { maxScore: task.maxScore });
 
     return res.status(201).json({
       success: true,
@@ -236,6 +241,12 @@ const gradeSubmission = async (req, res) => {
       course: task.course,
       link: `/student/course/${task.course}`,
     });
+
+    // Gamification: a full-marks grade earns a perfect score (+XP, Perfectionist
+    // badge). Grading time is the only point the grade exists. Fire-and-forget.
+    if (maxScore > 0 && grade >= maxScore) {
+      triggerActivity(submission.student?._id || submission.student, 'perfect_score');
+    }
 
     return res.json({
       success: true,

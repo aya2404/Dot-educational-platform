@@ -6,6 +6,7 @@ const Course = require('./models/Course');
 const Content = require('./models/Content');
 const Enrollment = require('./models/Enrollment');
 const Submission = require('./models/Submission');
+const Badge = require('./models/Badge');
 
 // ============================================================================
 // Idempotent, NON-DESTRUCTIVE, fully-fictional university-style demo seed.
@@ -76,6 +77,27 @@ const ensureSubmission = async (data) => {
   }
   return Submission.create(data);
 };
+
+// Keyed on {tenantId, name} (the Badge unique index) so re-runs update in place.
+const ensureBadge = async (data) => {
+  const existing = await Badge.findOne({ tenantId: data.tenantId || 'default', name: data.name });
+  if (existing) {
+    Object.assign(existing, data);
+    await existing.save();
+    return existing;
+  }
+  return Badge.create(data);
+};
+
+// Initial gamification badges for the default tenant.
+const SEED_BADGES = [
+  { name: 'أول تسليم', description: 'سلّم أول واجب لك', icon: 'FaRocket', color: '#3b82f6', criteria: 'سلّم واجباً واحداً', criteriaType: 'submission_count', criteriaValue: 1 },
+  { name: 'سلسلة 7 أيام', description: 'سجّل الدخول 7 أيام متتالية', icon: 'FaFire', color: '#f59e0b', criteria: 'سجّل الدخول 7 أيام متتالية', criteriaType: 'streak_days', criteriaValue: 7 },
+  { name: 'قاهر الكورس', description: 'أكمل جميع محاضرات كورس', icon: 'FaGraduationCap', color: '#8b5cf6', criteria: 'أكمل كورساً كاملاً', criteriaType: 'course_completion', criteriaValue: 1 },
+  { name: 'كثير النقاش', description: 'أرسل 10 رسائل في محادثة الكورس', icon: 'FaComments', color: '#ec4899', criteria: 'أرسل 10 رسائل', criteriaType: 'chat_messages', criteriaValue: 10 },
+  { name: 'المثالي', description: 'احصل على درجة كاملة في مهمة', icon: 'FaStar', color: '#facc15', criteria: 'احصل على درجة كاملة (100%)', criteriaType: 'perfect_score', criteriaValue: 1 },
+  { name: 'الأكثر تميزاً', description: 'أكمل 5 مهام', icon: 'FaTrophy', color: '#ef4444', criteria: 'سلّم 5 مهام', criteriaType: 'submission_count', criteriaValue: 5 },
+];
 
 const daysFromNow = (n) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 const linkAttachment = (url, name) => ({ kind: 'link', url, name: name || url, storage: 'external' });
@@ -412,6 +434,12 @@ const seed = async () => {
       seededSubmissions += 1;
     }
     console.log(`Demo progress ready (${seededSubmissions} submissions, ${seededCompletedLectures} completed lectures)`);
+
+    // Gamification badges for the default tenant (idempotent by {tenantId, name}).
+    for (const badge of SEED_BADGES) {
+      await ensureBadge({ ...badge, tenantId: 'default' });
+    }
+    console.log(`Badges ready (${SEED_BADGES.length})`);
 
     console.log('Seed completed successfully (idempotent — safe to re-run)');
     console.log('\nDemo accounts (log in with username OR studentId — passwords in LOCAL_SETUP.md):');

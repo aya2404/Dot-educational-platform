@@ -9,6 +9,7 @@ import {
   BsShieldCheck,
   BsStars,
   BsStickies,
+  BsTrophy,
   BsXLg,
 } from 'react-icons/bs';
 import { useAuth } from '../../context/AuthContext';
@@ -22,6 +23,7 @@ const NAV_LINKS = {
     { path: '/student', label: 'لوحة التحكم', icon: BsHouseDoor },
     { path: '/student/calendar', label: 'التقويم', icon: BsCalendarWeek },
     { path: '/student/notes', label: 'ملاحظاتي', icon: BsStickies },
+    { path: '/student/achievements', label: 'إنجازاتي', icon: BsTrophy },
     { path: '/pricing', label: 'الاشتراك', icon: BsStars },
   ],
   teacher: [
