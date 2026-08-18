@@ -5,18 +5,15 @@ import {
   BsCalendarWeek,
   BsGraphUpArrow,
   BsHouseDoor,
-  BsMoon,
   BsPlusSquare,
   BsShieldCheck,
   BsSliders,
   BsStars,
   BsStickies,
-  BsSun,
   BsTrophy,
   BsXLg,
 } from 'react-icons/bs';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { ROLE_LABELS } from '../../utils/auth';
 import BrandLogo from './BrandLogo';
 import NotificationBell from './NotificationBell';
@@ -50,7 +47,6 @@ const NAV_LINKS = {
 
 const Sidebar = ({ open, onClose }) => {
   const { user, logout } = useAuth();
-  const { mode, toggleMode } = useTheme();
   const navigate = useNavigate();
   const links = NAV_LINKS[user?.role] || [];
 
@@ -107,16 +103,6 @@ const Sidebar = ({ open, onClose }) => {
       </nav>
 
       <div className="sidebar-footer">
-        <button
-          type="button"
-          className="btn btn-outline-primary w-100 sidebar-theme-toggle"
-          onClick={toggleMode}
-          aria-label={mode === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}
-        >
-          {mode === 'dark' ? <BsSun size={16} /> : <BsMoon size={16} />}
-          {mode === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}
-        </button>
-
         <div className="sidebar-user-id">
           <span>المعرف</span>
           <strong>{user?.studentId || user?.username}</strong>

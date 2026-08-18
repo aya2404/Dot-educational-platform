@@ -188,6 +188,9 @@ const sendMessage = async (req, res) => {
       type: 'CHAT_MESSAGE',
       title: 'دردشة',
       message: 'رسالة جديدة في الدردشة',
+      // Clicking navigates to the course page (group chats only; direct chats
+      // have no course, so no link). Never reveals the sender or content.
+      link: chat.course ? `/student/course/${chat.course}` : '',
       tenantId: chat.tenantId,
     });
 
