@@ -11,6 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/common/AppLayout';
 import ConfirmModal from '../components/common/ConfirmModal';
 import Loader from '../components/common/Loader';
+import CertificateReviewPanel from '../components/common/CertificateReviewPanel';
+import CertificateTemplateForm from '../components/common/CertificateTemplateForm';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -26,12 +28,16 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
         { id: 'users', label: 'المستخدمون' },
         { id: 'courses', label: 'الكورسات' },
         { id: 'enrollments', label: 'التسجيلات' },
+        { id: 'certificates', label: 'اعتماد الشهادات' },
+        { id: 'cert-template', label: 'قالب الشهادة' },
         { id: 'branding', label: 'إعدادات المنصة' },
       ]
     : [
         { id: 'overview', label: 'نظرة عامة' },
         { id: 'users', label: 'المستخدمون' },
         { id: 'courses', label: 'الكورسات' },
+        { id: 'certificates', label: 'اعتماد الشهادات' },
+        { id: 'cert-template', label: 'قالب الشهادة' },
         { id: 'branding', label: 'إعدادات المنصة' },
       ];
 
@@ -592,6 +598,14 @@ const SuperAdminDashboard = ({ mode = 'superadmin' }) => {
               </button>
             </form>
           </section>
+        ) : null}
+
+        {!isLoading && !error && activeTab === 'certificates' ? (
+          <CertificateReviewPanel role="admin" />
+        ) : null}
+
+        {!isLoading && !error && activeTab === 'cert-template' ? (
+          <CertificateTemplateForm />
         ) : null}
 
         {!isLoading && !error && activeTab === 'branding' ? (

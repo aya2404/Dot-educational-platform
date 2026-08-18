@@ -80,14 +80,28 @@ const CertificateVerify = () => {
               </div>
             </div>
           </>
+        ) : result?.status && result.status !== 'rejected' ? (
+          <>
+            <div style={{ color: 'var(--dj-secondary)', marginBottom: 8 }}>
+              <BsXCircleFill size={54} />
+            </div>
+            <h1 style={{ fontSize: '1.4rem' }}>الشهادة قيد الإصدار</h1>
+            <p className="text-muted mb-0">
+              هذه الشهادة موجودة ولكنها لم تُعتمد نهائياً بعد. يُرجى المحاولة لاحقاً بعد اكتمال المراجعة.
+            </p>
+          </>
         ) : (
           <>
             <div style={{ color: 'var(--dj-danger)', marginBottom: 8 }}>
               <BsXCircleFill size={54} />
             </div>
-            <h1 style={{ fontSize: '1.4rem' }}>شهادة غير صالحة</h1>
+            <h1 style={{ fontSize: '1.4rem' }}>
+              {result?.status === 'rejected' ? 'الشهادة غير معتمدة' : 'شهادة غير صالحة'}
+            </h1>
             <p className="text-muted mb-0">
-              تعذّر التحقق من هذه الشهادة. قد تكون غير موجودة أو تم إلغاؤها.
+              {result?.status === 'rejected'
+                ? 'لم تتم الموافقة على هذه الشهادة.'
+                : 'تعذّر التحقق من هذه الشهادة. قد تكون غير موجودة أو تم إلغاؤها.'}
             </p>
           </>
         )}

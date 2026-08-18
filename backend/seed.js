@@ -7,6 +7,12 @@ const Content = require('./models/Content');
 const Enrollment = require('./models/Enrollment');
 const Submission = require('./models/Submission');
 const Badge = require('./models/Badge');
+const Chat = require('./models/Chat');
+const Message = require('./models/Message');
+const Note = require('./models/Note');
+const UserStat = require('./models/UserStat');
+const UserBadge = require('./models/UserBadge');
+const Notification = require('./models/Notification');
 
 // ============================================================================
 // Idempotent, NON-DESTRUCTIVE, fully-fictional university-style demo seed.
@@ -101,6 +107,79 @@ const SEED_BADGES = [
 
 const daysFromNow = (n) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 const linkAttachment = (url, name) => ({ kind: 'link', url, name: name || url, storage: 'external' });
+
+// ============================ RICH DEMO CONTENT ============================
+// Long, realistic bodies so the UI's truncation / "Show More" affordances appear.
+const LONG_ANSWER = [
+  'For this assignment I designed and implemented a complete REST API following a layered architecture that cleanly separates the routing, controller, service, and data-access concerns.',
+  'The routing layer only maps HTTP verbs and paths to controller handlers; it contains no business logic. Each controller validates and normalizes the incoming request, delegates to a service function, and shapes the HTTP response, returning consistent envelopes of the form { success, data } or { success, message }.',
+  'Validation happens at the boundary: every field is checked for presence, type, and range before anything touches the database, and invalid input returns a 400 with a clear, user-facing message rather than a raw stack trace. I paid particular attention to error status codes — 400 for validation, 401 for missing or invalid authentication, 403 for authorization failures, 404 for missing resources, and 500 only for genuinely unexpected server faults.',
+  'For persistence I used Mongoose models with explicit schemas, required-field constraints, and indexes on the fields I query most often, which keeps reads fast as the collection grows. Ownership is always derived on the server from the authenticated user, never trusted from the client, which closes a whole class of IDOR vulnerabilities.',
+  'I implemented full CRUD for the primary resource and wrote idempotent create logic so retries never produce duplicates. Pagination is cursor-friendly with sensible defaults and hard caps so a client can never request an unbounded result set. I also added consistent sorting and a light filtering layer that coerces query parameters to plain strings to prevent operator-injection through crafted query objects.',
+  'Testing was a first-class concern. I wrote unit tests around the service functions and integration tests that spin up the app against an isolated test database, covering the happy paths as well as the failure modes: missing fields, wrong types, unauthorized access, and not-found resources. Each test asserts both the status code and the response body so regressions surface immediately.',
+  'Finally, I documented every endpoint with its method, path, required auth, request shape, and possible responses, and I kept the code readable by matching the surrounding style, writing small single-responsibility functions, and adding comments only where the intent was not obvious from the code itself. If I had more time I would add rate limiting on the write endpoints and structured request logging for observability.',
+].join('\n\n');
+
+const LONG_LECTURE = [
+  'In this session we build a shared mental model of how a modern application fits together, from the browser all the way down to the database, and why each layer exists.',
+  'We start with the client: how the browser parses HTML, applies CSS, and runs JavaScript to build an interactive interface, and how the component model lets us compose complex screens from small, testable pieces of UI that each own a slice of state.',
+  'We then cross the network boundary. We look at how the client talks to the server over HTTP, what a well-designed REST endpoint looks like, and how request and response bodies are serialized as JSON. We discuss status codes as a contract, why 4xx and 5xx mean very different things, and how authentication tokens travel with each request.',
+  'On the server we walk through routing, middleware, controllers, and services, and we see how separating these concerns keeps the codebase maintainable as it grows. We cover validation at the boundary, consistent error handling, and why business logic should never live in the routing layer.',
+  'Finally we reach persistence: how the server models data, enforces constraints, and indexes the fields it queries most, and how tenant isolation and ownership checks keep every user’s data private. By the end you should be able to trace a single click in the browser all the way to a database write and back, and explain what each layer contributed along the way. Come to the next lab ready to implement a small slice of this end to end.',
+].join('\n\n');
+
+// --- idempotent upserts for the enrichment models ---
+const ensureNote = async (data) => {
+  const filter = { student: data.student, title: data.title, tenantId: data.tenantId || 'default' };
+  const existing = await Note.findOne(filter);
+  if (existing) { Object.assign(existing, data); await existing.save(); return existing; }
+  return Note.create(data);
+};
+
+const ensureUserStat = async (studentId, data) => {
+  const existing = await UserStat.findOne({ student: studentId });
+  if (existing) { Object.assign(existing, data); await existing.save(); return existing; }
+  return UserStat.create({ student: studentId, tenantId: 'default', ...data });
+};
+
+const ensureUserBadge = async (studentId, badgeId) => {
+  const existing = await UserBadge.findOne({ student: studentId, badge: badgeId });
+  if (existing) return existing;
+  return UserBadge.create({ student: studentId, badge: badgeId, tenantId: 'default' });
+};
+
+const ensureNotification = async (data) => {
+  const filter = { recipient: data.recipient, type: data.type, title: data.title, tenantId: data.tenantId || 'default' };
+  const existing = await Notification.findOne(filter);
+  if (existing) { Object.assign(existing, data); await existing.save(); return existing; }
+  return Notification.create(data);
+};
+
+// Find-or-create a course group chat, ensuring all demo participants are members.
+const ensureCourseChat = async (courseId, participantIds) => {
+  let chat = await Chat.findOne({ course: courseId, isGroupChat: true, tenantId: 'default' });
+  if (!chat) {
+    chat = await Chat.create({ course: courseId, isGroupChat: true, participants: participantIds, tenantId: 'default' });
+    return chat;
+  }
+  const present = new Set(chat.participants.map((p) => p.toString()));
+  let changed = false;
+  for (const id of participantIds) {
+    if (!present.has(id.toString())) { chat.participants.push(id); changed = true; }
+  }
+  if (changed) await chat.save();
+  return chat;
+};
+
+// Seed a message thread only if the chat has none yet (idempotent + non-destructive).
+const seedChatThread = async (chat, messages) => {
+  if ((await Message.countDocuments({ chat: chat._id })) > 0) return 0;
+  for (const m of messages) {
+    await Message.create({ chat: chat._id, sender: m.sender, content: m.content, readBy: [m.sender], tenantId: 'default' });
+  }
+  await Chat.updateOne({ _id: chat._id }, { $set: { updatedAt: new Date() } });
+  return messages.length;
+};
 
 // ============================= DEMO ACCOUNTS ================================
 // Exactly one fictional demo account per role. Passwords come from environment
@@ -403,17 +482,21 @@ const seed = async () => {
     // NO submission on purpose (a pending/unsubmitted task).
     const submissionPlan = [
       { course: 0, title: 'Assignment 1: Build a REST API', status: 'graded', grade: 92,
-        answer: 'Repo: implemented CRUD endpoints with validation and error handling.',
-        feedback: 'Excellent structure and clear validation. Watch your error status codes.' },
+        answer: LONG_ANSWER, feedback: 'Excellent structure and clear validation. Watch your error status codes.',
+        attachments: [linkAttachment('https://github.com/demo/rest-api', 'Project Repository')] },
       { course: 0, title: 'Assignment 2: Add JWT Authentication', status: 'submitted',
-        answer: 'Added login, protected routes, and role-based access. Write-up attached.' },
+        answer: LONG_ANSWER,
+        attachments: [linkAttachment('https://github.com/demo/jwt-auth', 'Auth Write-up')] },
       { course: 2, title: 'ER Diagram Assignment', status: 'graded', grade: 88,
-        answer: 'ER diagram for a library domain with entities, relationships and keys.',
-        feedback: 'Good normalization. Consider a weak entity for loan history.' },
-      { course: 2, title: 'Normalization Practice', status: 'submitted',
-        answer: 'Normalized the given schema to 3NF with justification for each step.' },
+        answer: LONG_ANSWER, feedback: 'Good normalization. Consider a weak entity for loan history.',
+        attachments: [linkAttachment('https://example.com/er-diagram.pdf', 'ER Diagram (PDF)')] },
+      // A "rejected" outcome: the Submission model has no rejected status, so this
+      // is a graded-0 with rejection feedback (closest the schema allows).
+      { course: 2, title: 'Normalization Practice', status: 'graded', grade: 0,
+        answer: 'Submitted an incomplete normalization; several tables remain in 2NF.',
+        feedback: 'Rejected — the schema is not fully in 3NF. Revise the transitive dependencies and resubmit.' },
       { course: 4, title: 'Assignment: Build a Simple Classifier', status: 'submitted',
-        answer: 'Trained and evaluated a logistic-regression classifier on the dataset.' },
+        answer: LONG_ANSWER },
       // Course 1 (UI/UX) task "Assignment: Mobile App Prototype" intentionally
       // left unsubmitted to demonstrate a pending task.
     ];
@@ -426,6 +509,7 @@ const seed = async () => {
         answer: p.answer,
         status: p.status,
       };
+      if (p.attachments) data.attachments = p.attachments;
       if (p.status === 'graded') {
         data.grade = Math.min(p.grade, task.maxScore || 100);
         data.feedback = p.feedback;
@@ -440,6 +524,158 @@ const seed = async () => {
       await ensureBadge({ ...badge, tenantId: 'default' });
     }
     console.log(`Badges ready (${SEED_BADGES.length})`);
+
+    // ===================== RICH DEMO ENRICHMENT (promo video) =================
+    const c0 = courses[0]; // Full-Stack Web Development
+    const c1 = courses[1]; // UI/UX Design
+
+    // --- Sticky notes for the demo student (2 pinned, varied colors, a link, a checklist) ---
+    const NOTES = [
+      { title: 'قائمة المهام لهذا الأسبوع', pinned: true, color: '#fef08a',
+        content: 'المطلوب هذا الأسبوع:\n- إنهاء واجب JWT\n- مراجعة محاضرة النشر (Deployment)\n- تجهيز مشروع التخرج\n- التحضير للامتحان النهائي' },
+      { title: 'تذكير مهم', pinned: true, color: '#fbcfe8',
+        content: 'موعد تسليم مشروع التخرج بعد أسبوعين — لا تنسَ رفع رابط المستودع قبل الموعد! ⏰' },
+      { title: 'ملاحظات Full-Stack', color: '#bfdbfe', course: c0._id,
+        content: 'راجع الفرق بين المصادقة (Authentication) والتفويض (Authorization)، وكيفية حماية المسارات بالـ JWT.' },
+      { title: 'فكرة مشروع', color: '#bbf7d0',
+        content: 'تطبيق لإدارة المهام مع إشعارات فورية ولوحة تحكم تفاعلية ورسوم بيانية للتقدّم.' },
+      { title: 'روابط مفيدة', color: '#fef08a',
+        content: 'MDN — freeCodeCamp — وثائق React. راجعها قبل الامتحان.' },
+      { title: 'اقتباس تحفيزي', color: '#ddd6fe',
+        content: 'التعلّم رحلة وليست وجهة. استمر! 🚀' },
+    ];
+    for (let i = 0; i < NOTES.length; i++) {
+      await ensureNote({ student: demoStudent._id, tenantId: 'default', order: i, ...NOTES[i] });
+    }
+
+    // --- Badges + XP for the demo student (mix of unlocked + locked) ---
+    await ensureUserStat(demoStudent._id, {
+      totalXp: 470, submissionCount: 4, perfectScores: 0, streakDays: 7,
+      lecturesCompleted: 12, coursesCompleted: 1, chatMessagesSent: 12, lastActivityDate: new Date(),
+    });
+    for (const badgeName of ['أول تسليم', 'سلسلة 7 أيام', 'قاهر الكورس', 'كثير النقاش']) {
+      const b = await Badge.findOne({ tenantId: 'default', name: badgeName });
+      if (b) await ensureUserBadge(demoStudent._id, b._id);
+    }
+
+    // --- Leaderboard XP for Full-Stack students (demo student lands ~#3) ---
+    const c0Enrollments = await Enrollment.find({ course: c0._id }).select('student');
+    const c0OtherIds = c0Enrollments
+      .map((e) => e.student.toString())
+      .filter((id) => id !== demoStudent._id.toString());
+    const XP_LADDER = [640, 540, 455, 430, 410, 390, 370, 350, 330, 315, 300];
+    const leaderboardCount = Math.min(XP_LADDER.length, c0OtherIds.length);
+    for (let i = 0; i < leaderboardCount; i++) {
+      await ensureUserStat(c0OtherIds[i], { totalXp: XP_LADDER[i] });
+    }
+
+    // --- Chat threads (Full-Stack: 15 msgs, UI/UX: 10 msgs) ---
+    const S = demoStudent._id;
+    const T = demoTeacher._id;
+    const A = students[1]._id; // STU-1001
+    const B = students[2]._id; // STU-1002
+    const chat0 = await ensureCourseChat(c0._id, [S, T, A, B]);
+    const thread0 = [
+      { sender: S, content: 'السلام عليكم دكتور 👋 عندي سؤال عن هيكلة الـ REST API — وين الأفضل أحط منطق التحقق (validation)؟' },
+      { sender: T, content: 'وعليكم السلام. التحقق يكون عند حدود الطلب داخل الـ controller قبل ما تلمس قاعدة البيانات، وأي مدخل غير صالح يرجّع 400 مع رسالة واضحة.' },
+      { sender: A, content: 'يعني نفصل المنطق عن الـ routes؟' },
+      { sender: T, content: 'بالضبط. الـ route فقط يربط الـ verb بالـ handler. مثال:\n`router.post("/tasks", protect, createTask);`\nوالمنطق كله داخل الـ controller/service.' },
+      { sender: S, content: 'ممتاز، شكراً! سؤال ثاني عن الـ JWT — كيف أحمي المسارات؟' },
+      { sender: T, content: 'استخدم middleware يتحقق من التوكن ويضيف req.user. مثال:\n`const decoded = jwt.verify(token, SECRET);`\nثم امنع الوصول إذا التوكن غير صالح (401).' },
+      { sender: B, content: 'وش الفرق بين 401 و 403؟ 🤔' },
+      { sender: T, content: '401 = غير مُصادق (ما في توكن صالح). 403 = مُصادق لكن لا يملك صلاحية للمورد.' },
+      { sender: S, content: 'تمام تمام 🙏' },
+      { sender: T, content: 'اقرأوا هذا المرجع قبل المحاضرة القادمة: https://developer.mozilla.org/en-US/docs/Web/HTTP' },
+      { sender: A, content: 'خلّصت الـ CRUD وأضفت pagination بحدود قصوى ✅' },
+      { sender: T, content: 'أحسنت 👏 لا تنسَ تكتب اختبارات للـ happy path والحالات الفاشلة.' },
+      { sender: S, content: 'كيف أنشر المشروع بعد ما أخلص؟' },
+      { sender: T, content: 'نغطي النشر في الجلسة المباشرة القادمة (Deployment Q&A) — جهّزوا أسئلتكم.' },
+      { sender: S, content: 'رائع! شكراً جزيلاً دكتور 🚀' },
+    ];
+    const msgs0 = await seedChatThread(chat0, thread0);
+
+    const chat1 = await ensureCourseChat(c1._id, [S, T, A]);
+    const thread1 = [
+      { sender: S, content: 'دكتور، ما هو أهم مبدأ في التصميم للمبتدئين؟ 🎨' },
+      { sender: T, content: 'التسلسل البصري (Visual Hierarchy): وجّه عين المستخدم للأهم أولاً عبر الحجم والتباين والمسافات.' },
+      { sender: A, content: 'كيف أختار الألوان؟' },
+      { sender: T, content: 'ابدأ بلون أساسي واحد ولون ثانوي للتمييز، وحافظ على تباين كافٍ لسهولة القراءة (WCAG).' },
+      { sender: S, content: 'وش أفضل أداة للـ prototyping؟' },
+      { sender: T, content: 'أي أداة تريح فريقك — المهم تبدأ بـ low-fidelity ثم ترفع الدقة تدريجياً.' },
+      { sender: A, content: 'فهمت، شكراً! 🙏' },
+      { sender: T, content: 'راجعوا نظام Material Design كمثال على نظام تصميم متكامل: https://m3.material.io/' },
+      { sender: S, content: 'خلّصت أول نموذج أولي للتطبيق ✅' },
+      { sender: T, content: 'ممتاز 👏 نراجعه في الاستوديو القادم.' },
+    ];
+    const msgs1 = await seedChatThread(chat1, thread1);
+
+    // --- Notifications for the demo student (mix of types) ---
+    const NOTIFS = [
+      { type: 'SUBMISSION_GRADED', title: 'تم تقييم تسليمك', message: '«Assignment 1: Build a REST API»: 92 من 100', course: c0._id, link: `/student/course/${c0._id}` },
+      { type: 'COURSE_ANNOUNCEMENT', title: 'إعلان جديد', message: 'Full-Stack Web Development: Welcome & Course Roadmap', course: c0._id, link: `/student/course/${c0._id}` },
+      { type: 'CHAT_MESSAGE', title: 'دردشة', message: 'رسالة جديدة في الدردشة', link: `/student/course/${c0._id}` },
+      { type: 'CERTIFICATE_ISSUED', title: '🎓 تم إصدار شهادتك', message: 'تمت الموافقة على شهادتك ويمكنك تنزيلها الآن.', link: '/student' },
+      { type: 'NEW_TASK', title: 'مهمة جديدة', message: 'Full-Stack Web Development: Final Exam Project', course: c0._id, link: `/student/course/${c0._id}` },
+    ];
+    for (const n of NOTIFS) {
+      await ensureNotification({ recipient: demoStudent._id, tenantId: 'default', isRead: false, ...n });
+    }
+
+    // --- Calendar extras: an upcoming lecture + an "exam" task on Full-Stack ---
+    await ensureContent({
+      course: c0._id, createdBy: demoTeacher._id, type: 'lecture',
+      title: 'Live Session: Deployment Q&A', body: LONG_LECTURE, contentDate: daysFromNow(3), order: 20,
+      attachments: [linkAttachment('https://www.youtube.com/watch?v=nu_pCVPKzTk', 'Session Recording')],
+    });
+    await ensureContent({
+      course: c0._id, createdBy: demoTeacher._id, type: 'task',
+      title: 'Final Exam Project', body: 'Final capstone submission — deploy your app and submit the URL.',
+      contentDate: daysFromNow(1), dueDate: daysFromNow(14), maxScore: 100, order: 21,
+    });
+
+    // --- Long lecture descriptions on the 4 main courses (first 3 lectures each) ---
+    for (const ci of [0, 1, 2, 4]) {
+      const lectures = await Content.find({ course: courses[ci]._id, type: { $in: ['lecture', 'video'] } })
+        .sort({ order: 1 }).limit(3);
+      for (const lec of lectures) {
+        lec.body = LONG_LECTURE;
+        if (!lec.attachments || lec.attachments.length === 0) {
+          lec.attachments = [linkAttachment('https://example.com/lecture-slides.pdf', 'Lecture Slides (PDF)')];
+        }
+        await lec.save();
+      }
+    }
+
+    // --- Filler-student submissions on Full-Stack tasks (populate teacher grading) ---
+    const c0Tasks = await Content.find({ course: c0._id, type: 'task' }).select('_id maxScore');
+    let fillerSubs = 0;
+    for (let i = 1; i < Math.min(students.length, 25); i++) {
+      const enrolled = await Enrollment.findOne({ student: students[i]._id, course: c0._id });
+      if (!enrolled || c0Tasks.length === 0) continue;
+      const task = c0Tasks[i % c0Tasks.length];
+      const graded = i % 2 === 0;
+      const data = {
+        task: task._id, student: students[i]._id,
+        answer: LONG_ANSWER.slice(0, 480), status: graded ? 'graded' : 'submitted',
+      };
+      if (graded) { data.grade = Math.min(70 + (i % 25), task.maxScore || 100); data.feedback = 'Good work overall — mind the edge cases.'; }
+      await ensureSubmission(data);
+      fillerSubs += 1;
+    }
+
+    // --- Progress for STU-1001..1003: 2 completed lectures + 1 graded + 1 pending ---
+    for (const si of [1, 2, 3]) {
+      const s = students[si];
+      const enr = await Enrollment.findOne({ student: s._id, course: c0._id });
+      if (!enr) continue;
+      const lecs = await Content.find({ course: c0._id, type: { $in: ['lecture', 'video'] } }).sort({ order: 1 }).limit(2);
+      enr.completedLectures = lecs.map((l) => l._id);
+      await enr.save();
+      if (c0Tasks[0]) await ensureSubmission({ task: c0Tasks[0]._id, student: s._id, answer: LONG_ANSWER.slice(0, 320), status: 'graded', grade: 85, feedback: 'Well structured.' });
+      if (c0Tasks[1]) await ensureSubmission({ task: c0Tasks[1]._id, student: s._id, answer: 'Submitted — pending review.', status: 'submitted' });
+    }
+
+    console.log(`Rich demo content ready (notes ${NOTES.length}, chat ${msgs0}+${msgs1} msgs, notifications ${NOTIFS.length}, leaderboard ${leaderboardCount}, filler submissions ${fillerSubs})`);
 
     console.log('Seed completed successfully (idempotent — safe to re-run)');
     console.log('\nDemo accounts (log in with username OR studentId — passwords in LOCAL_SETUP.md):');

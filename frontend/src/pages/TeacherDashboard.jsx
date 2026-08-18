@@ -6,6 +6,7 @@ import AppLayout from '../components/common/AppLayout';
 import ConfirmModal from '../components/common/ConfirmModal';
 import Loader from '../components/common/Loader';
 import EmptyState from '../components/common/EmptyState';
+import CertificateReviewPanel from '../components/common/CertificateReviewPanel';
 import api from '../utils/api';
 import { getCreateContentPath, getRoleCoursePath } from '../utils/auth';
 
@@ -257,6 +258,8 @@ const TeacherDashboard = () => {
             </div>
           </article>
         </section>
+
+        <CertificateReviewPanel role="teacher" />
 
         {isLoading ? <Loader variant="section" card /> : null}
 

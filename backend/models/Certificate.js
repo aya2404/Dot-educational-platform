@@ -38,6 +38,30 @@ const certificateSchema = new mongoose.Schema(
       default: false,
     },
 
+    // Institutional approval workflow. A certificate is not issued (downloadable
+    // / publicly verifiable) until an admin gives the final approval.
+    status: {
+      type: String,
+      enum: ['pending', 'teacher_approved', 'admin_approved', 'rejected'],
+      default: 'pending',
+      index: true,
+    },
+
+    teacherReview: {
+      reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      reviewedAt: { type: Date },
+      feedback: { type: String, default: '' },
+    },
+
+    adminReview: {
+      reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      reviewedAt: { type: Date },
+      feedback: { type: String, default: '' },
+    },
+
+    // Set only when the admin gives final approval (status -> 'admin_approved').
+    issuedAt: { type: Date },
+
     // Multi-tenancy isolation key (inherited from the student's tenant).
     tenantId: {
       type: String,

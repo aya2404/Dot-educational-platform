@@ -110,6 +110,7 @@ const StudentDashboard = () => {
 
   const [certBusyCourse, setCertBusyCourse] = useState('');
   const [certMessage, setCertMessage] = useState({ type: '', text: '' });
+  const [certByCourse, setCertByCourse] = useState({}); // courseId -> certificate
 
   // First-time onboarding banner (dismissed permanently via localStorage).
   const [showOnboarding, setShowOnboarding] = useState(
@@ -120,13 +121,35 @@ const StudentDashboard = () => {
     setShowOnboarding(false);
   };
 
-  const handleGetCertificate = async (courseId) => {
+  // Request a certificate (creates a PENDING record — no PDF until admin approval).
+  const requestCertificate = async (courseId) => {
     setCertBusyCourse(courseId);
     setCertMessage({ type: '', text: '' });
     try {
-      // Generate (idempotent) then download the PDF for the caller's own cert.
       const created = await api.post('/certificates', { courseId });
       const certificate = created.data.data;
+      setCertByCourse((current) => ({ ...current, [courseId]: certificate }));
+      setCertMessage({
+        type: certificate.status === 'admin_approved' ? 'success' : 'info',
+        text: certificate.status === 'admin_approved'
+          ? 'شهادتك معتمدة ويمكنك تنزيلها.'
+          : 'تم إرسال طلب الشهادة، وهي الآن قيد المراجعة.',
+      });
+    } catch (requestError) {
+      setCertMessage({
+        type: 'danger',
+        text: requestError.response?.data?.message || 'تعذر طلب الشهادة',
+      });
+    } finally {
+      setCertBusyCourse('');
+    }
+  };
+
+  // Download an ISSUED (admin-approved) certificate's PDF.
+  const downloadCertificate = async (certificate) => {
+    setCertBusyCourse(certificate.course?._id || certificate.course);
+    setCertMessage({ type: '', text: '' });
+    try {
       const pdf = await api.get(`/certificates/${certificate._id}/pdf`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(pdf.data);
       const link = document.createElement('a');
@@ -140,7 +163,7 @@ const StudentDashboard = () => {
     } catch (requestError) {
       setCertMessage({
         type: 'danger',
-        text: requestError.response?.data?.message || 'تعذر إصدار الشهادة',
+        text: requestError.response?.data?.message || 'تعذر تنزيل الشهادة',
       });
     } finally {
       setCertBusyCourse('');
@@ -159,6 +182,20 @@ const StudentDashboard = () => {
       }
     };
 
+    const fetchCertificates = async () => {
+      try {
+        const response = await api.get('/certificates');
+        const map = {};
+        (response.data.data || []).forEach((cert) => {
+          const courseId = cert.course?._id || cert.course;
+          if (courseId) map[courseId] = cert;
+        });
+        setCertByCourse(map);
+      } catch {
+        /* certificates are supplementary — never block the dashboard */
+      }
+    };
+
     const fetchStats = async () => {
       try {
         const response = await api.get('/analytics/student');
@@ -172,6 +209,7 @@ const StudentDashboard = () => {
 
     fetchEnrollments();
     fetchStats();
+    fetchCertificates();
   }, []);
 
   const totalCompletedLectures = enrollments.reduce(
@@ -320,23 +358,49 @@ const StudentDashboard = () => {
             </div>
           ) : (
             <div className="d-flex flex-column gap-2">
-              {enrollments.map((enrollment) => (
-                <div key={enrollment._id} className="stack-list__item static">
-                  <div className="d-flex align-items-center gap-2">
-                    <BsAward size={18} />
-                    <strong>{enrollment.course?.name}</strong>
+              {enrollments.map((enrollment) => {
+                const courseId = enrollment.course?._id;
+                const cert = certByCourse[courseId];
+                const busy = certBusyCourse === courseId;
+                const rejectFeedback = cert?.adminReview?.feedback || cert?.teacherReview?.feedback;
+                return (
+                  <div key={enrollment._id} className="stack-list__item static">
+                    <div className="d-flex align-items-center gap-2">
+                      <BsAward size={18} />
+                      <strong>{enrollment.course?.name}</strong>
+                    </div>
+
+                    {!cert ? (
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => requestCertificate(courseId)}
+                        disabled={busy}
+                      >
+                        {busy ? 'جارٍ الإرسال...' : 'طلب الشهادة'}
+                      </button>
+                    ) : cert.status === 'admin_approved' ? (
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => downloadCertificate(cert)}
+                        disabled={busy}
+                      >
+                        <BsDownload size={14} />
+                        {busy ? 'جارٍ التنزيل...' : 'تحميل الشهادة'}
+                      </button>
+                    ) : cert.status === 'rejected' ? (
+                      <span className="badge bg-danger" title={rejectFeedback || ''}>
+                        مرفوض{rejectFeedback ? ` · ${rejectFeedback}` : ''}
+                      </span>
+                    ) : cert.status === 'teacher_approved' ? (
+                      <span className="badge bg-info text-dark">بانتظار اعتماد الإدارة</span>
+                    ) : (
+                      <span className="badge bg-secondary">قيد المراجعة</span>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => handleGetCertificate(enrollment.course?._id)}
-                    disabled={certBusyCourse === enrollment.course?._id}
-                  >
-                    <BsDownload size={14} />
-                    {certBusyCourse === enrollment.course?._id ? 'جارٍ الإصدار...' : 'تحميل الشهادة'}
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
