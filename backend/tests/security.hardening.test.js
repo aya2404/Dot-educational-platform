@@ -5,12 +5,36 @@ const mongoose = require('mongoose');
 // Ensure a JWT secret exists for the successful-login path (self-contained).
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-security';
 
-const { isUploadAllowed } = require('../middleware/upload');
+const { isUploadAllowed, hasValidSignature } = require('../middleware/upload');
 const { buildAllowedOrigins, isOriginAllowed } = require('../utils/cors');
 const { normalizeAttachmentArray } = require('../utils/attachments');
 const User = require('../models/User');
 const { login } = require('../controllers/authController');
 const { getAllUsers } = require('../controllers/userController');
+
+// ==================== F1b — MAGIC-BYTE SIGNATURE VALIDATION =================
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const PDF_MAGIC = Buffer.from('%PDF-1.7\n', 'ascii');
+const PLAIN_TEXT = Buffer.from('this is plain text, not an image', 'utf8');
+const BINARY_BLOB = Buffer.from([0x00, 0x01, 0x02, 0x03, 0xff, 0x00, 0x10]);
+
+test('F1b: a .txt file renamed to .png is rejected (content != declared type)', () => {
+  assert.equal(hasValidSignature({ buffer: PLAIN_TEXT, originalname: 'x.png' }), false);
+});
+
+test('F1b: a genuine PNG / PDF passes the signature check', () => {
+  assert.equal(hasValidSignature({ buffer: PNG_MAGIC, originalname: 'photo.png' }), true);
+  assert.equal(hasValidSignature({ buffer: PDF_MAGIC, originalname: 'doc.pdf' }), true);
+});
+
+test('F1b: real text files pass; a binary payload renamed to .txt is rejected', () => {
+  assert.equal(hasValidSignature({ buffer: PLAIN_TEXT, originalname: 'notes.txt' }), true);
+  assert.equal(hasValidSignature({ buffer: BINARY_BLOB, originalname: 'notes.txt' }), false);
+});
+
+test('F1b: an empty buffer is rejected', () => {
+  assert.equal(hasValidSignature({ buffer: Buffer.alloc(0), originalname: 'x.png' }), false);
+});
 
 // ============================ F1 — UPLOAD FILTER ============================
 test('F1: dangerous browser-renderable extensions are rejected (even with benign MIME)', () => {

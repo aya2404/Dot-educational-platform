@@ -4,6 +4,7 @@ const path = require('path');
 
 const { cloudinary, hasCloudinaryConfig } = require('../config/cloudinary');
 const { inferAttachmentKind, toPublicUrl } = require('../utils/attachments');
+const { hasValidSignature } = require('../middleware/upload');
 
 const sanitizeFileName = (fileName) => {
   const extension = path.extname(fileName || '').toLowerCase();
@@ -81,6 +82,17 @@ const uploadFiles = async (req, res) => {
 
     if (!files.length) {
       return res.status(400).json({ success: false, message: 'يرجى اختيار ملف واحد على الأقل' });
+    }
+
+    // Defence-in-depth: reject any file whose real content signature does not
+    // match the type its extension claims (e.g. a script/text payload renamed to
+    // .png). This runs alongside the existing MIME/extension allow-list.
+    const spoofed = files.find((file) => !hasValidSignature(file));
+    if (spoofed) {
+      return res.status(400).json({
+        success: false,
+        message: 'محتوى الملف لا يطابق نوعه المعلن',
+      });
     }
 
     const uploadedFiles = await Promise.all(
