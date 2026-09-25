@@ -1,61 +1,39 @@
-﻿# =====================
-# Environment
-# =====================
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.*.local
-_env
-
-# اترك هذا مرفوع (مهم للمشروع)
-!.env.example
-
-
-# =====================
-# Dependencies
-# =====================
+﻿# Dependencies
 node_modules/
+.pnpm-store/
+.yarn/
+.npm/
 
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
 
-# =====================
-# Logs
-# =====================
-*.log
-
-
-# =====================
-# Build
-# =====================
-build/
+# Builds
+.next/
+.nuxt/
 dist/
+build/
+out/
+coverage/
 
-
-# =====================
-# Seed
-# =====================
-backend/seed/
-
-
-# =====================
-# Runtime uploads
-# =====================
-backend/uploads/
-
-
-# =====================
-# Documentation (ignore)
-# =====================
-DOCUMENTATION.md
-TECHNICAL_DOCUMENTATION.md
-QA_NOTION_PACKAGE.md
-
-
-# =====================
-# Editor / OS
-# =====================
+# IDE
 .vscode/
 .idea/
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+
+# NOTE: .env is intentionally NOT ignored (user's decision)
+
+# Temp
+tmp/
+temp/
+
+# DBs
+*.sqlite
+*.sqlite3
